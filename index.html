@@ -66,7 +66,7 @@
             display: flex;
         }
 
-        .control-button {
+        button {
             background: transparent;
             color: var(--text-color);
             border: none;
@@ -80,10 +80,6 @@
             transition: background-color 0.2s, transform 0.1s;
         }
 
-        .control-button:hover {
-            background: var(--secondary-bg);
-            transform: translateY(-2px);
-        }
 
         .control-button.active {
             background: var(--primary-color);
@@ -119,7 +115,7 @@
             border-radius: 20px;
             padding: 30px;
             width: 90%;
-            max-width: 800px;
+            max-width: 900px;
         }
 
         .word-display {
@@ -184,7 +180,7 @@
             margin: 15px 0;
             color: var(--error-color);
             text-align: center;
-            font-size: 16px;
+            font-size: 20px;
             transition: color 0.1s;
         }
 
@@ -228,14 +224,26 @@
         .progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #4299e1, #3182ce);
+            background: linear-gradient(90deg, #4299e1, #367dbf, #40a2e9);
             box-shadow: 0 0 10px #4299e1;
             transition: width 0.5s ease-in-out;
+            background-size: 200% 100%;
+            animation: wave 1s linear infinite;
+        }
+
+        @keyframes wave {
+            0% {
+                background-position: 200% 0%;
+            }
+
+            100% {
+                background-position: 0% 0%;
+            }
         }
 
         .hidden-text {
             color: transparent !important;
-            text-shadow: 0 0 14px var(--text-color);
+            text-shadow: 0 0 18px var(--text-color);
         }
 
         .start-prompt {
@@ -267,6 +275,77 @@
         .slide-in {
             animation: slideIn 0.1s ease-out forwards;
         }
+
+        /* 帮助窗口遮罩层 */
+        .help-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .help-overlay.active {
+            display: flex;
+        }
+
+        /* 帮助窗口主体 */
+        .help-window {
+            background: #fff;
+            width: 500px;
+            padding: 10px 60px;
+            border-radius: 12px;
+        }
+
+        h2,
+        h3 {
+            padding: 10px;
+            text-align: center;
+        }
+
+        body.dark-mode .help-window {
+            background: #2c2c2c;
+            color: #ddd;
+        }
+
+        /* 内容 */
+
+        body.dark-mode h2 h3 {
+            color: #ccc;
+        }
+
+        .icon,
+        .key {
+            margin-right: 12px;
+        }
+
+        .help-content .key {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        body.dark-mode .help-content .key {
+            background: #444;
+        }
+
+        /* 关闭按钮 */
+        .help-close {
+            margin: 20px auto;
+            width: 80%;
+            padding: 8px;
+            background: #007bff;
+            color: #fff;
+            display: block;
+            text-align: center;
+        }
+
 
         /* Keyframes */
         @keyframes slideLeft {
@@ -338,22 +417,54 @@
                 transform: translateX(0);
             }
         }
+
+        .slide-in-right {
+            animation: slideInRight 0.1s ease-out forwards;
+        }
+
+        .slide-right {
+            animation: slideRight 0.1s ease-out forwards;
+        }
+
+        @keyframes slideInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            100% {
+                opacity: 0.7;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideRight {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(33.333%);
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="header">
         <div class="controls">
-            <button class="control-button dark-mode-toggle" title="切换暗/亮模式">🌙</button>
+            <button class="dark-mode-toggle" title="切换暗/亮模式">🌙</button>
             <div style="position: relative;">
-                <button class="control-button difficulty-toggle" title="调整难度">⚙️</button>
+                <button class="difficulty-toggle" title="调整难度">⚙️</button>
                 <div class="difficulty-dropdown">
                     <p>难度级别: <span class="level-display">5</span></p>
                     <input type="range" class="difficulty-slider" min="1" max="20" value="10">
                 </div>
             </div>
-            <button class="control-button hide-word-toggle" title="隐藏/显示单词">🙈</button>
-            <button class="control-button restart-button" title="重新开始">🔄</button>
+            <button class="hide-word-toggle" title="隐藏/显示单词">🙈</button>
+            <button class="restart-button" title="重新开始">🔄</button>
+            <button class="help-button" title="帮助">❔</button>
+            <button class="skip-mode-toggle" title="未掌握单词练习">❌</button>
         </div>
     </div>
     <div class="main-container">
@@ -375,6 +486,37 @@
                 </div>
             </div>
         </div>
+        <div class="help-overlay">
+            <div class="help-window">
+                <div class="help-header">
+                    <h2>使用指南</h2>
+                </div>
+                <div class="help-content">
+                    <section>
+                        <h3>基本操作</h3>
+                        <ul>
+                            <li>点击“开始练习”区域开始训练</li>
+                            <li>每次随机筛选30个单词练习</li>
+                            <li>单词听写时，输入错误5次单词会加入未掌握单词库</li>
+                            <li>难度级别共20级,每级别50词</li>
+                            <li>未掌握单词练习中若同时开启隐藏单词模式听写，输入正确3次可从未掌握单词中清除该单词，下次练习时就不会有该单词了</li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h3>快捷键</h3>
+                        <ul>
+                            <p><span class="key">Enter</span> 显示当前单词</p>
+                            <p><span class="key">\</span> 播放当前单词音频</p>
+                            <p><span class="key">Esc</span> 切换隐藏模式</p>
+                            <p><span class="key">End</span> 清除跳过的单词</p>
+                            <p><span class="key">→</span> 跳过当前未掌握的单词</p>
+                            <p><span class="key">←</span> 返回上个单词</p>
+                        </ul>
+                    </section>
+                </div>
+                <button class="help-close">关闭</button>
+            </div>
+        </div>
         <div class="error-text"></div>
         <div class="progress-bar-container">
             <div class="progress-bar"></div>
@@ -394,7 +536,11 @@
             </div>
             <div class="info-col">
                 <p class="correct-text">0</p>
-                <p>正确数</p>
+                <p>正确单词数</p>
+            </div>
+            <div class="info-col">
+                <p class="error-word-text">0</p>
+                <p>错误单词数</p>
             </div>
             <div class="info-col">
                 <p class="correctrate-text">100%</p>
@@ -406,96 +552,150 @@
         const beep = new Audio("data:audio/mpeg;base64,//NAxAASObKIDUBAAiAx///y7vegoDcPz2FAaAsDwaCgFgeGIieiJX////7v//CECgoKUWDcBQBQPKLBuDcXsTwfB8uf4IOWf+XB/BN4IHPDH//4kDCgAAAADYNtp65AuRxux////+f/80LEEhkL0uJfgWgCNutR/shrUFcFxJF0TIMxzGcIom0oG5KoqcupPp0767qWks1SFoU/5Jf1ia5qcUutFT1Mqz6l22qf1db3H4s0v/iyEht/9x0//9P//+gXv//6j1UCMjAliFTd1pL/80DECRVDRpR1wJgDk0lOizIJoGM0ATEFQjKk8TSC3QTdDfXv+jbV9mugnQSuccmwMDARiFnG5uboIv/dl6711f+r9LUzLDA4yKLf/VW3////a7OYiPxkWALSHAEJAupdSaBskbF0fP/zQsQPF2tKtH4DTv7UutToqL4TUOapkqI7is0PoropLQPl0ySoaadBNX/2UtklJGJgCvCfGZ5JSbK/nLf3ZKofZ1RWf/as0RWS3+6mTlY5THY1Pv//0mjYKhxyD04F4P////R61tNTqP/zQMQNFtNGjFVBaAKjqdSTJvYepKDyrRZzIvF1KpFlomD9l3dWtkfWjXalTZUtMwrQdpJMcWvq+/7LZ1JPX2U61spLdlJLOMMCasYos/qdBM1o7////9TrRWeqAI+lkkUXgAGl//////NCxAwXmmqAXYGIAKH1IGJg6BxqkoiAd8unYzQWHB6yi+YkBpJJGa3nFPWgz1t0VLnHHyUQHEfZcTUTx0mRzgIwTmSOtFFai9Z1GSlJGzpmVaaSl62sfZv/8vHkXfK1AWgBfIhCzCGY//NAxAkOoNnphcEYAkOIT5+L4x+q9VS4zFszdCgIFBVQd/VKnRKdg1/UDSg6vkYKwVljysS///9R5QdgqsFVTEFNRTMuOTkuM1VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=");
         const words = ['the', 'be', 'and', 'of', 'in', 'to', 'have', 'to', 'it', 'that', 'for', 'you', 'he', 'with', 'on', 'do', 'say', 'this', 'they', 'at', 'but', 'we', 'his', 'from', 'that', 'not', 'by', 'she', 'or', 'as', 'what', 'go', 'their', 'can', 'who', 'get', 'if', 'would', 'her', 'all', 'my', 'make', 'about', 'know', 'will', 'as', 'up', 'one', 'time', 'there', 'year', 'so', 'think', 'when', 'which', 'them', 'some', 'me', 'people', 'take', 'out', 'into', 'just', 'see', 'him', 'your', 'come', 'could', 'now', 'than', 'like', 'other', 'how', 'then', 'its', 'our', 'two', 'more', 'these', 'want', 'way', 'look', 'first', 'also', 'new', 'because', 'day', 'more', 'use', 'no', 'man', 'find', 'here', 'thing', 'give', 'many', 'well', 'only', 'those', 'tell', 'one', 'very', 'her', 'even', 'back', 'any', 'good', 'woman', 'through', 'us', 'life', 'child', 'there', 'work', 'down', 'may', 'after', 'should', 'call', 'world', 'over', 'school', 'still', 'try', 'in', 'as', 'last', 'ask', 'need', 'too', 'feel', 'three', 'when', 'state', 'never', 'become', 'between', 'high', 'really', 'something', 'most', 'another', 'much', 'family', 'own', 'out', 'leave', 'put', 'old', 'while', 'mean', 'on', 'keep', 'student', 'why', 'let', 'great', 'same', 'big', 'group', 'begin', 'seem', 'country', 'help', 'talk', 'where', 'turn', 'problem', 'every', 'start', 'hand', 'might', 'American', 'show', 'part', 'about', 'against', 'place', 'over', 'such', 'again', 'few', 'case', 'most', 'week', 'company', 'where', 'system', 'each', 'right', 'program', 'hear', 'so', 'question', 'during', 'work', 'play', 'government', 'run', 'small', 'number', 'off', 'always', 'move', 'like', 'night', 'live', 'Mr', 'point', 'believe', 'hold', 'today', 'bring', 'happen', 'next', 'without', 'before', 'large', 'all', 'million', 'must', 'home', 'under', 'water', 'room', 'write', 'mother', 'area', 'national', 'money', 'story', 'young', 'fact', 'month', 'different', 'lot', 'right', 'study', 'book', 'eye', 'job', 'word', 'though', 'business', 'issue', 'side', 'kind', 'four', 'head', 'far', 'black', 'long', 'both', 'little', 'house', 'yes', 'after', 'since', 'long', 'provide', 'service', 'around', 'friend', 'important', 'father', 'sit', 'away', 'until', 'power', 'hour', 'game', 'often', 'yet', 'line', 'political', 'end', 'among', 'ever', 'stand', 'bad', 'lose', 'however', 'member', 'pay', 'law', 'meet', 'car', 'city', 'almost', 'include', 'continue', 'set', 'later', 'community', 'much', 'name', 'five', 'once', 'white', 'least', 'president', 'learn', 'real', 'change', 'team', 'minute', 'best', 'several', 'idea', 'kid', 'body', 'information', 'nothing', 'ago', 'right', 'lead', 'social', 'understand', 'whether', 'back', 'watch', 'together', 'follow', 'around', 'parent', 'only', 'stop', 'face', 'anything', 'create', 'public', 'already', 'speak', 'others', 'read', 'level', 'allow', 'add', 'office', 'spend', 'door', 'health', 'person', 'art', 'sure', 'such', 'war', 'history', 'party', 'within', 'grow', 'result', 'open', 'change', 'morning', 'walk', 'reason', 'low', 'win', 'research', 'girl', 'guy', 'early', 'food', 'before', 'moment', 'himself', 'air', 'teacher', 'force', 'offer', 'enough', 'both', 'education', 'across', 'although', 'remember', 'foot', 'second', 'boy', 'maybe', 'toward', 'able', 'age', 'off', 'policy', 'everything', 'love', 'process', 'music', 'including', 'consider', 'appear', 'actually', 'buy', 'probably', 'human', 'wait', 'serve', 'market', 'die', 'send', 'expect', 'home', 'sense', 'build', 'stay', 'fall', 'oh', 'nation', 'plan', 'cut', 'college', 'interest', 'death', 'course', 'someone', 'experience', 'behind', 'reach', 'local', 'kill', 'six', 'remain', 'effect', 'use', 'yeah', 'suggest', 'class', 'control', 'raise', 'care', 'perhaps', 'little', 'late', 'hard', 'field', 'else', 'pass', 'former', 'sell', 'major', 'sometimes', 'require', 'along', 'development', 'themselves', 'report', 'role', 'better', 'economic', 'effort', 'up', 'decide', 'rate', 'strong', 'possible', 'heart', 'drug', 'show', 'leader', 'light', 'voice', 'wife', 'whole', 'police', 'mind', 'finally', 'pull', 'return', 'free', 'military', 'price', 'report', 'less', 'according', 'decision', 'explain', 'son', 'hope', 'even', 'develop', 'view', 'relationship', 'carry', 'town', 'road', 'drive', 'arm', 'TRUE', 'federal', 'break', 'better', 'difference', 'thank', 'receive', 'value', 'international', 'building', 'action', 'full', 'model', 'join', 'season', 'society', 'because', 'tax', 'director', 'early', 'position', 'player', 'agree', 'especially', 'record', 'pick', 'wear', 'paper', 'special', 'space', 'ground', 'form', 'support', 'event', 'official', 'whose', 'matter', 'everyone', 'center', 'couple', 'site', 'end', 'project', 'hit', 'base', 'activity', 'star', 'table', 'need', 'court', 'produce', 'eat', 'American', 'teach', 'oil', 'half', 'situation', 'easy', 'cost', 'industry', 'figure', 'face', 'street', 'image', 'itself', 'phone', 'either', 'data', 'cover', 'quite', 'picture', 'clear', 'practice', 'piece', 'land', 'recent', 'describe', 'product', 'doctor', 'wall', 'patient', 'worker', 'news', 'test', 'movie', 'certain', 'north', 'love', 'personal', 'open', 'support', 'simply', 'third', 'technology', 'catch', 'step', 'baby', 'computer', 'type', 'attention', 'draw', 'film', 'Republican', 'tree', 'source', 'red', 'nearly', 'organization', 'choose', 'cause', 'hair', 'look', 'point', 'century', 'evidence', 'window', 'difficult', 'listen', 'soon', 'culture', 'billion', 'chance', 'brother', 'energy', 'period', 'course', 'summer', 'less', 'realize', 'hundred', 'available', 'plant', 'likely', 'opportunity', 'term', 'short', 'letter', 'condition', 'choice', 'place', 'single', 'rule', 'daughter', 'administration', 'south', 'husband', 'Congress', 'floor', 'campaign', 'material', 'population', 'well', 'call', 'economy', 'medical', 'hospital', 'church', 'close', 'thousand', 'risk', 'current', 'fire', 'future', 'wrong', 'involve', 'defense', 'anyone', 'increase', 'security', 'bank', 'myself', 'certainly', 'west', 'sport', 'board', 'seek', 'per', 'subject', 'officer', 'private', 'rest', 'behavior', 'deal', 'performance', 'fight', 'throw', 'top', 'quickly', 'past', 'goal', 'second', 'bed', 'order', 'author', 'fill', 'represent', 'focus', 'foreign', 'drop', 'plan', 'blood', 'upon', 'agency', 'push', 'nature', 'color', 'no', 'recently', 'store', 'reduce', 'sound', 'note', 'fine', 'before', 'near', 'movement', 'page', 'enter', 'share', 'than', 'common', 'poor', 'other', 'natural', 'race', 'concern', 'series', 'significant', 'similar', 'hot', 'language', 'each', 'usually', 'response', 'dead', 'rise', 'animal', 'factor', 'decade', 'article', 'shoot', 'east', 'save', 'seven', 'artist', 'away', 'scene', 'stock', 'career', 'despite', 'central', 'eight', 'thus', 'treatment', 'beyond', 'happy', 'exactly', 'protect', 'approach', 'lie', 'size', 'dog', 'fund', 'serious', 'occur', 'media', 'ready', 'sign', 'thought', 'list', 'individual', 'simple', 'quality', 'pressure', 'accept', 'answer', 'hard', 'resource', 'identify', 'left', 'meeting', 'determine', 'prepare', 'disease', 'whatever', 'success', 'argue', 'cup', 'particularly', 'amount', 'ability', 'staff', 'recognize', 'indicate', 'character', 'growth', 'loss', 'degree', 'wonder', 'attack', 'herself', 'region', 'television', 'box', 'TV', 'training', 'pretty', 'trade', 'deal', 'election', 'everybody', 'physical', 'lay', 'general', 'feeling', 'standard', 'bill', 'message', 'fail', 'outside', 'arrive', 'analysis', 'benefit', 'name', 'sex', 'forward', 'lawyer', 'present', 'section', 'environmental', 'glass', 'answer', 'skill', 'sister', 'PM', 'professor', 'operation', 'financial', 'crime', 'stage', 'ok', 'compare', 'authority', 'miss', 'design', 'sort', 'one', 'act', 'ten', 'knowledge', 'gun', 'station', 'blue', 'state', 'strategy', 'little', 'clearly', 'discuss', 'indeed', 'force', 'truth', 'song', 'example', 'democratic', 'check', 'environment', 'leg', 'dark', 'public', 'various', 'rather', 'laugh', 'guess', 'executive', 'set', 'study', 'prove', 'hang', 'entire', 'rock', 'design', 'enough', 'forget', 'since', 'claim', 'note', 'remove', 'manager', 'help', 'close', 'sound', 'enjoy', 'network', 'legal', 'religious', 'cold', 'form', 'final', 'main', 'science', 'green', 'memory', 'card', 'above', 'seat', 'cell', 'establish', 'nice', 'trial', 'expert', 'that', 'spring', 'firm', 'Democrat', 'radio', 'visit', 'management', 'care', 'avoid', 'imagine', 'tonight', 'huge', 'ball', 'no', 'close', 'finish', 'yourself', 'talk', 'theory', 'impact', 'respond', 'statement', 'maintain', 'charge', 'popular', 'traditional', 'onto', 'reveal', 'direction', 'weapon', 'employee', 'cultural', 'contain', 'peace', 'head', 'control', 'base', 'pain', 'apply', 'play', 'measure', 'wide', 'shake', 'fly', 'interview', 'manage', 'chair', 'fish', 'particular', 'camera', 'structure', 'politics', 'perform', 'bit', 'weight', 'suddenly', 'discover', 'candidate', 'top', 'production', 'treat', 'trip', 'evening', 'affect', 'inside', 'conference', 'unit', 'best', 'style', 'adult', 'worry', 'range', 'mention', 'rather', 'far', 'deep', 'past', 'edge', 'individual', 'specific', 'writer', 'trouble', 'necessary', 'throughout', 'challenge', 'fear', 'shoulder', 'institution', 'middle', 'sea', 'dream', 'bar', 'beautiful', 'property', 'instead', 'improve', 'stuff', 'detail', 'method', 'sign', 'somebody']
         const paraphrases = ['art.定冠词', 'v.(就) 是,等于', 'conj.和,与,及;那么,则', 'prep.(表示从属、同位、性质、内容、位置、距离等关系)...的', 'prep.表示场所、位置)在...里面;(表示时间)在...期间,在...以后;(表示工具、方式)以...方式;(表示状态、情况)在...中,处于;(表示范围、领域、方向)在...之内,在...方面', 'prep.经;向;达到', 'v.有,具有;体会,经受;从事,进行;使,让;吃,喝吸(烟)', 'prep.经;向;达到', 'pron.它', 'adj.&pron.那,那个', 'prep.为,为了;给,对,供,适合于;代替,代表;由于,因为;就...而言;达,计;往,向;以...为交换,以...为代价;赞成,支持 conj.因为', 'pron.你;你们', 'pron.他', 'prep.跟...一起;用;具有,带有;因,由于;关于,就...而言;随着', 'prep.在...上;临近,靠近;向,朝;在...时;关于;靠,根据,由于 ad.在上;向前', 'v.做,干,办;从事;完成,做完;行', 'v.说;说明 n.凡说法,意见;发言权', 'pron.这', 'pron.他们', 'prep.在...里,在...上;向,朝;在...时刻;(指价格,速度等)以,达;在...方面', 'conj.但是,可是,然而 prep.除...以外 adv.只,仅仅', 'pron.我们', 'pron.他的', 'prep.从...来,出自;离;去除,免除,阻止;从,据;出于', 'adj.&pron.那,那个', 'adv.不', 'prep.在...旁,靠近;被,由;在...以前,到...为止;经,沿,通过;(表示方式、手段)靠,用,通过;按照,根据 adv.在旁,近旁;经过', 'pron.她', 'conj.或,或者(表示选择);即,大约;否则', 'conj.当...时,在...的同时;如同...那样,以...的方式,像...一样;因为,由于;以致于 prep.作为,当作 adv.同样地,一样地', 'pron.什么;(引出宾语从句)所...的事物(或人) adj.(表示感叹)多么', 'v.去,走;运行,进行;成为,变', 'pron.他们的', 'aux.v.能 n.(美) 罐头;容器', 'pron.谁(引起疑问句)', 'v.获得,使得,变得;到达', 'conj.如果,假使;是否', 'v.愿,想,要;总是,便会', 'pron.她的;她(宾格)', 'adj.所有的,全部的 pron.一切,全体 adv.(常用以加强语气)完全,全部', 'pron.我的', 'v.做,制造,建造;(使)成为,(使)变成;获得,挣钱;总计,等于', 'prep.关于;在...周围', 'v.知道,了解,明白;认识,熟悉', 'v.将,会;愿,要 n.决心,意志;遗嘱', 'conj.当...时,在...的同时;如同...那样,以...的方式,像...一样;因为,由于;以致于 prep.作为,当作 adv.同样地,一样地', 'prep.向上 adv.起床,起来;完', 'n.一,一个 prep.一个人,任何人', 'n.时间,时刻;次,回;时代,时期;倍', 'adv.在那里,往那里', 'n.年,年度', 'conj.因此,那么,,adv.非常,很;那么,如此;这样,那样', 'v.想,思索,认为;考虑,打算', 'adv.什么时候,何时;(引出定语从句)...的时候,那时 conj.当...时 pron.什么时候', 'pron.哪一个,哪一些', 'pron.他们(宾格)', 'pron.一些,有些(用于肯定句) adv.大约 adj.某-', 'pron.我(宾格)', 'n.人,人们,人民;民族', 'v.拿,取,擅;拿走,带去;需要,花费;接受,获得', 'adv.在外,向外;熄灭;完结', 'prep.到...里面,进入(表示时间、动作方向等);成为(表示变化)', 'adv.正好地,恰好地;刚刚,刚才;仅仅是,只不过 adj.公正的,公平的', 'v.看见;理解,明白;会见,见面;获悉,知道', 'pron.他(宾格)', 'pron.你的;你们的', 'v.来,到来;出现,产生;成为', 'aux.&v.可以,能,可能', 'adv.现在,目前;于是,然后', 'conj.比；比较；与…相比；', 'v.喜爱,喜欢 prep.像,同...一样 adj.同样的,相像的', 'adj.另外的,别的 pron.别的东西;别人', 'adv.怎么,怎样,(用作疑问副词,连接副词);多少,多么(可引导感叹句)', 'adv.在那时,当时;那么,因而;然后,于是', 'pron.它的', 'pron.我们的', 'n.& adj.二', 'adj.更多的,较多的 n.更多的人(或物) adv.更,更多', 'pron.&adj.这些', 'v.想要,需要;缺乏,缺少 n.(pl.) 必需品;缺乏;需要', 'n.道路,路程;方法,手段,方式;习惯,作风', 'n.看,注视;脸色,外表 v.好象,显得;看,注视', 'num.第一 adj.最初,首先', 'adv.同样地', 'adj.新的,新近的;不熟悉的;没经验的', 'conj.因为', 'n.白昼,白天;(一) 天', 'adj.更多的,较多的 n.更多的人(或物) adv.更,更多', 'v.使用,消耗 n.使用,用法,用途', 'adv.不,不是,没有,毫不', '(men)n.男人;人;人类', 'v.找到,发现;发觉,感到', 'adv.这里,到这里;在这一点上,这时', 'n.物,东西;事,事情', 'v.给,提供;举办;交给;传授;进行', 'adj.许多的 n.许多', 'adv.恰当地 adj.健康的,良好的 n.井', 'adv.只,仅仅 adj.惟一的 conj.可是,不过', 'adj.&pron.那些', 'v.告诉,讲述;吩咐,命令;泄露,吐露;辨别,区别(from)', 'n.一,一个 prep.一个人,任何人', 'adv.很,非常;真正地,完全 adj.恰好的;真正的,真实的', 'pron.她的;她(宾格)', 'adv.甚至,连(...都) adj.均匀的;平的,平坦的;相等的,均等的;双数的,偶数的', 'n.背部;背面,后面', 'adj.(否定、疑问、条件句中)什么;一些;任何的,任一的', 'adj.好的,善良的;有益的,有效的 n.益处,好处', '(women)n.妇女,女人', 'prep.通过,穿过 adv.自始至终', 'pron.我们(宾格)', '(lives)n.生命,寿命,一生;生活,生计', '(children)n.小孩,儿童', 'adv.在那里,往那里', 'n.著作,作品;成果,制品;工作,劳动 v.运转,开动;工作,劳动', 'adv.向下,在下面;往南;处于低落状态 prep.沿着...而下', 'aux.& v.可能,或许,可以;祝,愿', 'prep.在...以后,在...后面', 'v.应当,应该', 'v.作,称为,称呼;叫,呼唤;(给某人)', 'n.世界,地球;领域;世间,人间', 'prep.&adv.在...上方,高于,超过;完了,结束;到处,遍及', 'n.学校,学院(系)', 'adv.还,仍旧;静,静止', 'v.试图,努力;试验,试用;审讯,审理', 'prep.表示场所、位置)在...里面;(表示时间)在...期间,在...以后;(表示工具、方式)以...方式;(表示状态、情况)在...中,处于;(表示范围、领域、方向)在...之内,在...方面', 'conj.当...时,在...的同时;如同...那样,以...的方式,像...一样;因为,由于;以致于 prep.作为,当作 adv.同样地,一样地', 'v.持续,持久', 'v.问,询问;请求,要求;邀请,约请', 'n.必须,需要;贫困,困窘 v.需要,必频', 'adv.也,太', 'v.感觉;(for)摸索;触,摸;认为,以为', 'num.三,三个', 'adv.什么时候,何时;(引出定语从句)...的时候,那时 conj.当...时 pron.什么时候', 'n.国家,州;情况,状态 v.声明,陈述', 'adv.从不,永不;决不', 'v.变成,成为', 'prep.在...(两者)之间', 'adj.高的;高级的;高尚的 adv.高', 'adv.确实,实在;真正地,果然', 'pron.某物,某事', 'adj.(many, much的最高级) 最多的,最高程度的 adv.最;非常 n.大多数,大部分', 'adj.再一个的,另一个的;别的,不同的 prep.另一个', 'n.＆adj.许多.大量 adv.非常;更', 'n.家,家庭(成员);家族,氏族;族,科', 'v.拥有 adj.自己的', 'adv.在外,向外;熄灭;完结', 'v.离开,动身;留下,剩下;让,听任', 'v.放置', 'adj.老的,旧的,以前的;...岁的', 'conj.当...的时候;虽然,尽管 n.一会儿,一段时间 v.消磨', 'v.意旨,意味着;意欲,打算 adj.低劣的,平庸的;卑鄙的,吝啬的', 'prep.在...上;临近,靠近;向,朝;在...时;关于;靠,根据,由于 ad.在上;向前', 'v.保留,保存;保持,继续;遵守,保守,履行;抑制(防止)(from)', 'n.学生,学者', 'adv.为什么', 'v.让,允许;出租;放任,听任', 'adj.大的,伟大的;重大的;美妙的', 'adj.相同的,一样的 pron.同样的人,同样的事情', 'adj.大的,巨大的;重要的,重大的', 'n.群,小组 v.分组,积聚', 'v.开始', 'v.仿佛,好像', 'n.国家;乡下,农村', 'v.& n.帮助,援助', 'v.谈,讲;讨论,议论 n.讲话,演讲', 'adv.在哪里,往哪里;(定语从句)...的地方 pron.哪里,什么地方', 'v.& n.翻,旋转,转动;轮流,轮班;扭转,转向', 'n.难题,问题', 'adj.每,每个;每隔...的', 'v.&n.开始,着手;动身,出发;吃惊,惊起', 'n.手;指针 v.交出;传递', 'aux.& v.也许 n.权力,力量', 'adj.美洲的;美国的;美国人的', 'v.展示,显示;指示,指出 n.展出,陈列', 'n.部分;角色;零件;职责;一方,方面 v.分离,使分开', 'prep.关于;在...周围', 'prep.倚在,紧靠着', 'n.地方,地点,位置;职位,职责;住所,寓所 v.放,置;安排,任命', 'prep.&adv.在...上方,高于,超过;完了,结束;到处,遍及', 'adj.这样的,这种的', 'adv.再一次,又一次', 'aadj. 很少的;很少;pron. 很少;有些(人、事物、地方)', 'n.情况,情形,事实;案件,案情;病例', 'adj.(many, much的最高级) 最多的,最高程度的 adv.最;非常 n.大多数,大部分', 'n.星期,周', 'n.公司,商号;同伴,朋友', 'adv.在哪里,往哪里;(定语从句)...的地方 pron.哪里,什么地方', 'n.系统,制度', 'adj.& pron.每,各,各自', 'adj.正确的,恰当的;右的,右面的 n.右,右面;权利 adv.完全,正好;正确,恰当;直接,马上', 'n. 程序;节目，节目单;计划，安排;', 'v.听见,听说,得知;倾听', 'conj.因此,那么,,adv.非常,很;那么,如此;这样,那样', 'n.问题,议题敝.怀疑', 'prep.在...期间', 'n.著作,作品;成果,制品;工作,劳动 v.运转,开动;工作,劳动', 'v.玩 n.演奏,表演;游戏,娱乐;剧本,剧;活动,作用', 'n.政府;管理;政体', 'v.奔,跑,逃跑;流,淌;蔓延,伸展;经营,管理;运转,开动', 'adj.小的,少的', 'n.数字,数目;号码 v.编号,加号码', 'adv.离,距,(离)开;去掉,休止 prep.从,离', 'adv.总是,无例外地;永远,始终', 'v.移动;感动 n.步骤,行动', 'v.喜爱,喜欢 prep.像,同...一样 adj.同样的,相像的', 'n.夜,夜间', 'v.住,居住;生活,过活,生存', 'abbr. Mister 先生;Master 少爷;', 'v.指', 'v.相信,认为', 'v.拿住,持有;掌握;举行,召开(会议);包含,容纳 n.船舱', 'n.&adv.今天,现在', 'v.拿来,带来,送来;引起,产生', 'v.发生;碰巧', 'adv.其次,然后 adj.紧接的,其次的,贴近的', 'prep.没有,毫无', 'prep.在...以前;在...前面 conj.在...以前 adv.以前', 'adj.广大的,大的;规模大的;众多的', 'adj.所有的,全部的 pron.一切,全体 adv.(常用以加强语气)完全,全部', 'n.＆adj.百万(的)', 'v.必须,应当;很可能,务必', 'n.家,家乡,本国 adj.家的,家乡的,本国的 adv.在家,回家', 'prep.在...之下(与over反义);少于,低于;在...情况下,在...中', 'n.水 v.浇,灌', 'n.房间,室;余地,空间', 'v.写,写作;写信,函告', 'n.母亲,妈妈', 'n.面积;地域,地区;范围,领域', 'adj.办国家的,民族的,国民的', 'n.钱,货币', 'n.故事,小说;传说,事迹;经历,阅历', 'adj.年轻的 n.年轻人', 'n.事实,实际', 'n.月份,月', 'adj.差异的,不同的', 'n.许多', 'adj.正确的,恰当的;右的,右面的 n.右,右面;权利 adv.完全,正好;正确,恰当;直接,马上', 'v.&n.学习,研究', 'n.书,书籍 v.预订', 'n.眼睛;眼力,鉴赏力 v.看,注视', 'n.工作,职业', 'n.词,单词;言语,话;诺言,保证;音信,消息', 'conj.虽然 adv.可是,然而', 'n.商业,生意,企业;事务,业务,职责', 'v.流出,放出;发行,发表,颁布 发行(物),(报刊)期号,一次发行量;问题,争论点,争端', 'n.旁边,侧面;一边,一侧', 'n.种类,类别 adj.仁慈的,和善的,亲切的', 'num.四', 'n.头;头领,首脑 v.率领,带头', 'adj.远的,遥远的,久远的 adv.远,遥远,久远;到...程度,...得多', 'adj.黑色的;黑暗的 n.黑人;黑色', 'adj.长的,远的;长期的 v.渴望', 'prep.两者(都),双方(都) adj.两个...(都)', 'a.小,幼小;渺小 a.／n.不多ad.不大', 'n.房子,住宅;供宿,留宿 v.提供住房', 'ad.是,对,是的', 'prep.在...以后,在...后面', 'prep.自从 conj.因为,既然 adv,后来,从那以后', 'adj.长的,远的;长期的 v.渴望', 'v.提供,供给;规定', 'n.服务,服侍', 'adv.各处,周围 prep.在...周围(或附近)', 'n.朋友,友人', 'adj.重要的,重大的;有地位的,显要的', 'n.父亲;创始人,发明者;神父', 'v.坐', 'adv.远离,离开', 'prep.& conj.到...为止;直到', 'n.力,能力,精力;权力,势力;功率', 'n.小时;钟点,时刻;课时', 'n.游戏,比赛,运动会;猎物,目的物', 'adv.常常,屡次', 'adv.还,仍然;已经,更 conj.然而,可是', 'n.线,线条;界限;行,行列;航线,交通线,通讯线 v.排队,排列', 'adj.政治的;对政治感兴趣的', 'n.末尾,端,梢;目标,目的 v.终止,结束', 'prep.(=amongst)在...之中,在...之间', 'adv.曾经', 'v.站立;坐落,位于;经受,忍受 n.台,座', 'adj.坏的,不好的;严重的;严重的;腐败的', 'n.丢失,丧失;失败,输;迷(路)', 'adv.然而,可是', 'n.成员,会员', 'v.付款;交纳 n.工资', 'n.法令,法律,法规;规律,法则,定律', 'v.遇见,碰上;会见,迎接;会合,相会,开会;满足,符合', 'n.汽车,轿车', 'n.城市,都市', 'adv.几乎,差不多', 'v.包含,包括', 'v.继续,延伸', 'v.放,安置;(太阳)落山 n.一套,一副 adj.固定的,规定的', 'adv.后来;过后', 'n.社会,社区;共同体;公众', 'n.＆adj.许多.大量 adv.非常;更', 'n.名字,名称,名义 v.命名,取名;说出,指出', 'num.五', 'adv.一次,一度,曾经', 'n.& adj.白色(的)', 'adj.最少的,最小的 adv.最小,最少', 'n.总统,校长,会长,主席', 'v.学习,学会;听到,获悉', 'adj.真的,真实的;实际的,现实的', 'n.改变,变化;找头,零钱 v.改变,更改;换,兑换', 'n.小队,小组', 'n.分钟;一会儿,片刻 adj.微小的,微细的;详细的', 'adv.& adj.最好(的)', 'adj.若干,数个', 'n.想法,念头;观念,思想;意见,主意', 'n.小孩;小山羊;欺骗 V.戏弄,取笑;欺骗', 'n.身体,躯体,主体;物体;尸体;(一) 群,(一) 批', 'n.信息,情报,资料', 'n.没有东西,什么也没有;无,零 adv.毫不', 'adv.以前', 'adj.正确的,恰当的;右的,右面的 n.右,右面;权利 adv.完全,正好;正确,恰当;直接,马上', 'n.铅 v.带领', 'adj.社会的;交际的', 'v.懂,理解,领会;揣测,认为', 'conj.是否;不管,无论', 'n.背部;背面,后面', 'v.观看,注视,窥视;等待(for);看管,监视 n.手表,表;看管,监视', 'adv.共同,一起', 'v.跟随,接着;沿着...行进;遵照,采用,仿效;听懂,领会', 'adv.各处,周围 prep.在...周围(或附近)', 'n.父亲;母亲', 'adv.只,仅仅 adj.惟一的 conj.可是,不过', 'n.停车站;停止,中止 v.阻止,堵塞;停止,中止;逗留,留宿', 'n.脸,面孔;(表)面,外貌 v.面向,面临,面对', 'pron.(否定、疑问、条件句中)任何事物,任何东西;(肯定句中)无论什么东西,随便什么事情', 'v.创造,创作;引起,产生;建立', 'adj.公共的：公用的,公众的;公然的,公开的 n.公众,大众', 'adv.早已,已(经)', 'v.说话,讲;发言,演说', 'n. 别的( other的名词复数 );其他的;(两个中的)另一个;其余的;', 'v.朗读,阅读;辨认,观察', 'n.水平,水准;等级 v.弄平,铺平 adj.水平的', 'v.准许,允许;承认', 'v.加,加上;进一步说(或写);(to)', 'n.办公室,办事处;事务所;职务,公职;部,处,局', 'v.花费,消费;度过,消磨', 'n.门', 'n.健康,卫生', 'n.人', 'n.美术,艺术;技艺,技术,(需要技术的) 行业;(用作复数) 文科,人文学科', 'adj.确信的,有把握的;一定的,必然的;稳当的,可靠的', 'adj.这样的,这种的', 'n.战争,战斗', 'n.历史,历史学;来历,经历', 'n.集会,聚会;团体;一伙人;政党,党派;一方', 'prep.在...里面,在...以内 adv.在内', 'v.生长,发育,成长;种植,栽培;渐渐变得', 'n.结果,成绩,成果', 'v.打开 n.开始;开张,开放 adj.开着的,开放的;公开的,坦率的;开阔的,空旷的', 'n.改变,变化;找头,零钱 v.改变,更改;换,兑换', 'n.早晨,上午', 'v.步行,散步 n.人行道,散步场所;步行,散步', 'n.理由,原因;理性,理智 v.推理', 'adj.低的.矮的;低级的,卑贱的;低声的', 'v.赢得,获胜;达到,赶上', 'v.&n.研究,调查', 'n.女孩,少女', 'n.家伙,伙计 v.取笑,嘲弄', 'adv.在初期,早 adj.早的,早期的', 'n.食物,食品', 'prep.在...以前;在...前面 conj.在...以前 adv.以前', 'n.片刻,瞬间,时刻', 'pron.他自己,他亲自', 'n.空气;天空', 'n.教师', 'n.力,力量;暴力,武力;军队,部队 v.强迫,迫使;推动', 'v.& n.提供;提出,提议', 'adj.充足的,足够的 adv.足够地', 'prep.两者(都),双方(都) adj.两个...(都)', 'n.教育,培养', 'prep.横过,穿过;在...的对面', 'conj.虽然;尽管;即使', 'v.记住,记得', '(feet)n.脚,足;最下部,底部;英尺', 'adj.第二 n.秒', 'n.男孩', 'adv.也许,大概', 'prep. 对于;向;为了;接近;adj. 即将来到的;进行中的;', 'adj.有能力的,能干的', 'n.年龄', 'adv.离,距,(离)开;去掉,休止 prep.从,离', 'n.(pl.policies) 方针;政策', 'pron.每件事,一切', 'n.爱,热爱,爱戴;爱好,喜欢', 'n.过程;工序,制作法 v.加工,处理', 'n.音乐,乐曲', 'prep. 包括;包含;', 'v.认为,把...看作;考虑,细想;关心,顾及', 'v.出现,显露;来到;看起来像,好像是', 'adv. 实际上;事实上;确实;竟;', 'v.买,购买', 'adv.也许,大概', 'adj.人的,人类的 n.人', 'v.等候;侍侯(on) n.等候;等待时间', 'v.服务,尽责;侍候,招待;适用,适合', 'n.集市;市场', 'v.死,死亡', 'v.进,寄;派遣,打发', 'v.预期,盼望,期待', 'n.家,家乡,本国 adj.家的,家乡的,本国的 adv.在家,回家', 'v.感觉到,意识到,,几感官,官能;辨别力,感觉;意义,意思', 'v.建筑,建造;建立', 'v.停留,逗留', 'v.落下,降落;跌倒;下降,减弱 n.落下;跌倒;下降,减弱;秋季', 'int.啊,哎哟', 'n.国家,民族', 'n.计划,打算;平面图', 'v.切,剪,割,削;削减,删节 n.切,剪,割,削;伤口', 'n.大学,学院', 'n.兴趣,关心,注意;利息,利益 使感,兴趣', 'n.死,死亡', 'n.课程,教程;过程,进程;(一) 道(菜)', 'pron.有人,某人', 'n.经验,感受,体验,经历 v.经历,体验', 'prep.在...的背后,在...后面,落后于 adv.在背后,向后,落在后面', 'v.抵达.达到;伸手,够到 n.能达到的范围', 'adj.地方的,当地的;局部的', 'v.杀死,消灭;破坏,毁灭;消磨(时间)', 'n.&adj.六', 'v.剩下;依旧是', 'v.产生 n.结果,效果;影响,作用', 'v.使用,消耗 n.使用,用法,用途', 'adv. ( yes的俗音);(用于表示对后说的话不相信);(用于作出回应)哦;是;', 'v.建议,提出;暗示', 'n.班级;课;阶级,社会等级;种类,门类', 'v.& n.控制,支配;克制,抑制', 'v.举起,提升;抚养,饲养;建立,树立', 'n.小心,注意;照顾,关照 v.关心;介意;喜欢,愿意', 'adv.也许,恐怕,大概', 'a.小,幼小;渺小 a.／n.不多ad.不大', 'adv.迟 adj.晚,晚期的;迟的,迟到的', 'adj.坚硬的;困难的,艰苦的 adj.努力地;猛烈地', 'n.田野;运动场;(电或磁)场;领域,范围', 'adv.其他,另外', 'v.经过;传递;通过(考试等) n.通行证,护照;关隘', 'pron.前者 adj.以前的,在前的 n.形成者,创造者', 'v.卖,出售', 'adj.较大的,主要的(与minor反义);主修(in) n.专业;少校', 'adv.间或,不时,有时', 'v.需求,要求', 'prep.沿着', 'n.发展,形成;开发,研制;生长,进化', 'pron.他们自己', 'v.报告,汇报,报道 n.传说,传闻;报告,汇报,报道', 'n.角色,任务;作用', 'adj.较好的,更好的 adv.更好地', 'adj.经济的；经济学的；与经济相关的；节约的；省钱的；', 'n.努力', 'prep.向上 adv.起床,起来;完', 'v.决定;裁决,解决', 'n.速率,比率;等级;价格;费率 v.估价;评级,评价', 'adj.强大的,强壮的;强烈的', 'adj.可能的', 'n.心脏;心情,心肠;中心,实质;核心,关键', 'n.药,麻醉品,毒品', 'v.展示,显示;指示,指出 n.展出,陈列', 'n.领导者,领袖,首领', 'n.光,光亮,光线;灯,灯光 v.点,点燃;照亮,照耀', 'n. 嗓音;(动词的)语态;呼声，发言权;歌唱才能;', 'n.妻子', 'n.& adj.全部(的),全体(的);完整(的)', 'n.警察,警察局', 'n.头脑,精神;理智,智能;想法.意见 v.留心,当心;介意,在乎', 'adj.最后,最终,终于', 'v.&n.拉,拖,牵', '返回', 'a.自由的,无拘束的,免费的', 'adj.军事的,军国的,军队的', 'n.价格,价钱;代价', 'v.报告,汇报,报道 n.传说,传闻;报告,汇报,报道', 'adj.&adv.较少,更少', 'v.授予；给予；赠与；符合；配合；与..一致；', 'n.决定;果断', 'v.解释,说明', 'n.儿子', 'v.& n.希望,期望', 'adv.甚至,连(...都) adj.均匀的;平的,平坦的;相等的,均等的;双数的,偶数的', 'v.发展,形成;开发,研制;(逐渐) 显现出,显影', 'n.见解;观察;景象 v.看待;观察;考虑', '关系', 'v.携带,运载;传送,输送', 'n.城镇', 'n.路,道路;途径', 'v.驾驶;迫使,驱使 n.驾驶,驱车旅行', 'n.手臂;武器,武装 v.武装,装备', 'adj.真实的,确实的;忠实的,可靠的', 'adj.联邦的,联盟的 v.组成联邦,组成联合会', 'v.打破,打碎,使折断;违背,违反,破坏;打断,中止 n.中断,停止;(英) 课间休息', 'adj.较好的,更好的 adv.更好地', 'n.差别,差异;差额;(意见的) 分歧', 'v.n.感谢', 'v.收到,接到;接待,接见;受到', 'n.价值;实用性,重要性 v.评价,估计;尊重,重视', 'adj.国际的,世界的', 'n.建筑物,大楼;建筑', 'n.行动,行为;动作,活动;(on)', 'adj.(充) 满的;完全的,充分的', 'n.样式;模型,原型,模特儿;模范,典型', 'v.接合,结合,连接;加入,参加', 'n.季,季节,时节', 'n.社会;协会;团体;社交界', 'conj.因为', 'v.征税：加负担,使劳累 n.税', 'n.主任,厂长,院长;导演;指导者', 'adv.在初期,早 adj.早的,早期的', 'n.(可数)位置;职位,职务;姿势,姿态', 'n.(球类) 运动员;演奏者', 'v.同意', 'adv.特别,尤其,格外', 'n.唱片;记录,最高记录;经历,履历 v.记录', 'v.拾,捡,采,摘;挑选', 'v.穿戴,佩带;磨损,用旧', 'n.纸;报纸;文件;文章', 'adj.专门的,特殊的;附加的,额外的', 'n.太空,宇宙;空间,距离 v.隔开', 'n.地面,场所;根据,理由', 'n.形式;形状;表格 v.形成,组成', 'v.&n.支持,支援,拥护;供养,赡养', 'n.事件,大事;比赛项目', 'n.官员,行政保员 adj.官方的,正式的,公务的', 'pron.谁的', 'n.物质,物体;事情,情况,事态;毛病,麻烦事 v.要素,有关系(常用于否定句)', 'pron.每人,人人,各人', '(=centre)n.中心,中央;中心区,核心;中心人物', 'n.夫妻;一对,一双;两三(个),一些 v.连接,结合', 'n.位置,插所,地点', 'n.末尾,端,梢;目标,目的 v.终止,结束', 'n.方案,计划,项目 v.投射;(使)凸出;设计,规划', 'n.打击,击中,碰击 v.打击,击中,碰击;达到,完成', 'n.基(础),底(座);基地 v.(on) 把...建立在...基础上', 'n.活动;活力;敏捷', 'n.星,恒星;明星', 'n.桌子;表格;目录', 'n.必须,需要;贫困,困窘 v.需要,必频', 'n.法院,法庭;宫廷;院子;球场', 'v.生产,制造,产生;显示,出示;上演,演出 n.产品', 'v.吃', 'adj.美洲的;美国的;美国人的', 'v.教,教书;教训', 'n.油,石油 v.涂油,上油', 'n.半,一半', 'n.形势,局面', 'adj.容易的,不费力的;安逸的,舒适的', 'v.花费,值 n.成本,费用;代价', 'n.工业,产业;勤奋', 'v.描绘;计算 n.数字,数值;形象,人物;图,图形', 'n.脸,面孔;(表)面,外貌 v.面向,面临,面对', 'n.街道,马路', 'n.形象;肖像;影像,映像', 'pron.它本身,它自己', 'n.电话;电话机 v.打电话', 'pron.(两者之中) 任一 adv.(与not连用)也(不)', '数据', 'v.盖,覆盖;包括,涉及 n.(书的) 封面;盖子,套子', 'adv.完全,十分,相当,颇为', 'n.画,图片,照片', 'adj.清澈的,晴朗的,明亮的;清楚的,明白的,明显的 adv.清楚地,完全地 v.清除,澄清', '(=practise)n.实践,实施;练习,实习;业务', 'n.(一) 件,(一) 片,篇;碎块,片段 v.拼合,修补', 'n.陆地,土地;国土,国家 v.登陆,着陆', 'adj.最近的,近来的', 'v.形容,描写', 'n.产品;乘积', 'n.医生;博士', 'n.墙壁,围墙 v.筑墙围住,用墙隔开', 'adj.有耐心的;能忍耐的 n.病人,患者', 'n.工人,工作者', 'n.新闻,消息', 'v.&n.测验,试验,检验', 'n.电影;电影院', 'adj.确实的,无疑的;肯定的,必然的;某的,某一的', 'adj.& n.北,北方 adv.在北方,向北方', 'n.爱,热爱,爱戴;爱好,喜欢', 'adj.个人的,私人的;本人的,亲身的', 'v.打开 n.开始;开张,开放 adj.开着的,开放的;公开的,坦率的;开阔的,空旷的', 'v.&n.支持,支援,拥护;供养,赡养', 'adv.简单地;安全,简直,仅仅,只不过', 'adj.第三 n.三分之一', '技术', 'v.捉住,抓住;赶上,追上;听清楚,领会;染上,感染', 'v.举步,走 n.脚步,脚步声;台阶,梯级;步骤,措施', 'n.婴儿,孩子;年龄最小的人', 'n.计算机;计算者', 'n.型号,类型 v.打字', 'n.注意,留心', 'v.画;拖,拉;取出;推断出 n.平局,和局', 'n.影片,电影;胶卷;薄层,薄膜 v.把...摄成电影', 'adj.共和国的', 'n.树', 'n.源;来源,出处', 'adj.红色的 n.红色;红颜料', 'adv.差不多,几乎', 'n.(=organisation)组织;团体,机构;编制', 'v.选择,挑选;情愿;决定', 'n.原因,理由,缘故;事业,(奋斗的) 目标 v.使产生,引起', 'n.毛;毛衣', 'n.看,注视;脸色,外表 v.好象,显得;看,注视', 'v.指', 'n.世纪,百年', 'n.证据,根据,物证', 'n.窗,窗户', 'adj.困难的,艰难的;难对付的,难满足的', 'v.听,听从', 'adv.不久', 'n.修养,教养;文化,文明', 'n.(美) 十亿;(英) 万亿', 'v.碰巧,偶然发生 n.机会,可能性;运气,机运', 'n.兄弟', 'n.精力,力气,活力;能(量)', 'n.期间,一段时间;时期,时代;句号', 'n.课程,教程;过程,进程;(一) 道(菜)', 'n.夏天,夏季', 'adj.&adv.较少,更少', 'v.(=realise)认识到,体会到;(使)实现,得到', 'n.百', 'adj.可用的,可得到的;可以见到的,随时可来的', 'n.植物;工厂 v.种植,栽培', 'adj.很可能的,有希望的 adv.大概,很可能地', 'n.机会;时机', 'n.学期;期限;(pl.)条件;词', 'adj.短的,矮的;缺乏的,不足的 n.(pl.)短裤', 'n.信,函件;字母', 'vt.使习惯;训练 n.条件', 'n.选择,抉择;供选择的东西 adj.上等的,精选的', 'n.地方,地点,位置;职位,职责;住所,寓所 v.放,置;安排,任命', 'adj.单人的,单身的;单一的,单个的', 'v.统治,支配 n.规则,规章,规律;统治,支配;', 'n.女儿', 'n.管理,经营;行政(机关,部门);政府', 'n.&adj.南,南部', 'n.丈夫(与wife相对)', 'n.(代表) 大会;国会,议会', 'n.地板;楼层', 'n.战役;运动', 'n.材料,原料,资料 adj.物质的,实物的,具体的', 'n.人口', 'adv.恰当地 adj.健康的,良好的 n.井', 'v.作,称为,称呼;叫,呼唤;(给某人)', 'n.节约,节省;经济;经济制度', 'adj.医学的,医疗的,医药的', 'n.医院', 'n.教堂,教会;礼拜', 'v.关,关闭;结束,终止 adj.密切的,亲密的;近的,接近的;严密的', 'n.&adj.千', 'v.冒险 n.冒险;风险', 'n.电流,水流,气流;潮流趋势 adj.当前的;通用的,流行的', 'n.火;火灾,失火;炉火', 'n.将来,未来;前途,前景 adj.将来的,未来的', '错误的', 'v.使卷入,使陷人;包含,包围;涉及', '(=defence)', 'pron.任何人', 'v.& n.增加,增长,增进', 'n.安全,保障;抵押晶;证券,债券', 'n.银行,库;岸,堤', 'pron.我自己', 'adv.必定,一定;当然,行', 'n.& adj.西的,西方的 adv.向西', 'n.运动', 'n.木板(可数),纸板;委员会(尤指管理机构) v, 盖上木板;上(车,船,飞机等);供应伙食', 'v.寻找,探求;试图,企图', 'prep.每', 'n.主题,题目;学科,科目;主语 adj.易遭...的;受...支配的(to)', 'n.军官,警官', 'adj.私人的,个人的', 'v.&n.休息;放,靠;依赖,信赖', '行为', 'n.交易 v.给予,分给;交易', 'n.履行,执行;表演,演出;性能', 'v.＆n.斗争,打架,战斗', 'v.投,扔,抛', 'n.顶,顶部 adj.最高的', 'adv.迅速地', 'n.过去,昔日 adj.以前的,过去的 prep.经过,超过', 'n.终点;球门;得分;目标 v.得分', 'adj.第二 n.秒', 'n.床,床位', 'n.顺序,次序;等级;秩序,治安;定货,定货单;命令 v.定制,订购;命令', 'n.著者;创始人', 'v.装满,使充满', 'v.描述,表示;代表,代理', 'n.焦点,中心;焦距 v.(on)使聚集,集中;调焦距,对焦', 'adj.外国的,对外的;外来的,异质的;(to)陌生的', 'v.投下,落下;降低 n.下降;滴;微量', 'n.计划,打算;平面图', 'n.血,血液', 'prep.在...上', 'n.代理处,代办处', 'v.&n.推进,推动', 'n.自然,自然界;性质,本性,天性', '颜色', 'adv.不,不是,没有,毫不', '最近', 'v.储藏,储存 n.商店,店铺;储存晶,备用品;储藏,储存', 'v.缩小,减小,减低;使成为,简化,还原', 'n.声音,声响 v.发声响;听起来', 'n.笔记,记录,便条;注释,注意,评论;钞票,纸币 v.注意', 'adj.美好的,优良的,优秀的;晴朗的,明朗的;精细的,精致的 n.罚金,罚款 v.处以罚金', 'prep.在...以前;在...前面 conj.在...以前 adv.以前', 'adv.& adj.近,接近 prep.靠近', 'n.移动,活动,运动;姿势', 'n.页;一张(两面)', 'v.进人;参加,加入', 'v.分配,均分;分享,分担 n.份额', 'conj.比', 'a.普通的,通常的;共同的', 'adj.贫困的,穷的;可怜的;贫乏的', 'adj.另外的,别的 pron.别的东西;别人', 'adj.自然界的,天然的;自然的,天生的,固有的', 'v.&n.比赛;赛跑', 'v.涉及,关系到;(使) 担心,(使) 关切 n.关心,挂念;(利害) 关系', 'n.一系列,连续;丛书;(邮票)套', 'adj.有意义的;重大的', 'adj.类似的,相似的', 'adj.热的;辣的;热烈的,激烈的', 'n.语言', 'adj.& pron.每,各,各自', 'adv.通常', '响应', 'adj.死的;无感觉的', 'v.起床,起立;上升,上涨,增长 n.起源,发生;上升,上涨,增长', 'n.动物野兽牲畜 adj.动物的野兽的', 'n.因素,要素', 'n.十年;一组(十个)', '文章', 'v.发射,射(门);疾驰而过;发芽,长高 n.枝条,嫩枝,苗', 'n.东(方),东部 adv.向东方 adj.东方的;东部的', 'v.救,拯救;储蓄,储存;节省,节约', 'num.七', 'n.美术家;艺术家', 'adv.远离,离开', 'n.景象,景色;(戏)一场;布景', 'n.备料;存货;股票,公债;血统;祖先 v.储存,储备', 'n.生涯,经历;专业,职业', 'prep.不管,不顾;尽管', 'adj.中心的,中央的,中部的;中枢的', 'num.八', 'adv.如此,这样;因而,从而', 'n.对待,待遇;治疗,疗法', 'prep.在(或向)...的那边,远于;超出,超过 adv.在更远处', 'adj.幸福的,幸运的,快乐的,乐意的', 'adv.确切地,精确地', 'v.保护,保卫', 'v.靠近,接近,临近 n.方法,途径;探讨', 'v.平放;处于;位于;在于(in)', 'n.大小,尺寸;号码', 'n.狗', 'n.资金,基金,专款', 'adj.严肃的,庄重的;严重的,危急的;认真的', 'v.发生,出现;想起,起到', '媒体', 'adj.准备的;乐意的,情愿的', 'n.标记,符号;征兆,迹象', 'n.思想,思维,思考;想法,观念', 'n.表;目录;名单 v.列表,列入', 'adj.个人的,单独的;独特的 n.个人', 'adj.简单的：朴素的', 'n.质量;品质,特性', 'n.压力;强制', 'v.接受;认可', 'n.回答,答复;答案', 'adj.坚硬的;困难的,艰苦的 adj.努力地;猛烈地', 'n.(Pl.)资源,财力;办法,智谋', 'v.识别,鉴别;使等同于', 'adj.&n.左的,左边的,左面的', 'n.会议,集合', 'v.决定;确定;测定', 'v.准备,预备;制作,制备', 'n.疾病', 'pron.(引出状语从句)凡是...的,无论什么 adj.不管怎样的,无论什么样的', 'n.成功,成就', 'vi.论证,认定;争论,争吵', 'n.杯子;优胜怀,奖杯', '尤其', 'n.数量;总额,总数 v.(to) 合计,等于', 'n.能力,智能;才能,才干;技能', 'n.全体职工;杠,棒;参谋部 v.配备工作人早', '(=recognise)', 'v.指出,指示;表明,暗示;象征', 'n.性格,品质,特性;人物,角色;字符,(汉) 字', 'n.生长,增长,发展', 'n.丧失,丢失,亏损,损失', 'n.程度,度数;学位', 'n.惊奇,惊异;奇迹,奇事 v.诧异,奇怪;纳闷,想知道', 'v.攻击,进攻', 'pron.她自己', 'n.地区,区域,范围', '(=TV)n.电视,电视机', 'n.盒,箱;包箱 v.拳击', '电视', 'n.训练', 'adj.漂亮的,俊俏的 adv.相当地', 'n.贸易,行业 v.买卖,交易', 'n.交易 v.给予,分给;交易', 'n.选举', 'pron.每人,人人,各人', 'adj.物质的,有形的;肉体的,身体的;自然科学的', 'V.放,搁;下蛋,产卵;铺设,敷设', 'adj.普遍的;总体的 n.将军', 'n.感觉,知觉;感情', 'n.标准;规格', 'n.账单,账款;清单,单子;招贴,海报;(美) 钞票 v.给...开账单', 'n.通讯,消息n.启示;要旨', 'v.失败;不及格;失灵,衰退', 'adj.& n.外部 adv.向外,在外', 'v.到来,到达;来临;(at) 达到,达成', 'n.分析,分解', 'n.利益,好处;恩惠 v.有益于;(from, by) 受益', 'n.名字,名称,名义 v.命名,取名;说出,指出', 'n.性,性别', 'adj.向前的,前进的', 'n.律师,法学家', 'n.礼物;现在,目前 adj.出席的,在场的;目前的,现在的 v.赠送,给予;提出,出示,呈递', 'n.章节;部分;部门', '环境的', 'n.玻璃,玻璃杯;镜子;(pl.)眼镜', 'n.回答,答复;答案', 'n.技巧,熟练;技能,手艺', 'n.姐妹', '(P.M.,p.m.)n.下午', 'n.教授', 'n.操作,工作,运转;手术', 'adj.财政的,金融的', 'n.罪行;犯罪', 'n.阶段,时期;舞台;戏剧', '(O.K.,okay)int.行,可以;对,好', 'v.比较,对照', 'n.权力,权威;权威者;有权威性的典籍;(pl.)当局', 'v.未击中,未达到;未赶上;省去,遗漏;惦念', 'v.设计;图谋,企图;打算,计划 n.图案,花样;计划,企图', 'n.种类;类别 v.分类,整理', 'n.一,一个 prep.一个人,任何人', 'v.行动;做', 'n.&adj.十', 'n.知识,学问;知道,了解', 'n.枪,炮', 'n.站,台;身份,地位', 'adj.蓝色的;沮丧的,忧郁的 n.蓝色', 'n.国家,州;情况,状态 v.声明,陈述', 'n.战略,策略;计划', 'a.小,幼小;渺小 a.／n.不多ad.不大', '清晰地', 'v.讨论', 'adv.的确,确实', 'n.力,力量;暴力,武力;军队,部队 v.强迫,迫使;推动', 'n.真实,真相;真理', 'n.歌声;歌曲', 'n.例子,实例;模范,榜样;样品', 'adj.民主(主义) 的', 'v.(=cheque)阻止,制止,控制;检查,核对,调查;(凭票) 托运或寄存 n.核对,检查;(美) 支票;(饭馆) 账单', 'n.围绕,环绕;环境,外界', 'n.腿', 'adj.黑暗的;暗的,深色的,黑色的 n.黑暗,暗处', 'adj.公共的：公用的,公众的;公然的,公开的 n.公众,大众', 'adj.各种各样的,不同的;多方面的,多种的', 'adv.有些,相当;宁可,宁愿', 'v.&n.笑', 'v.推测,猜测;相信', 'n.总经理,董事,行政负责人;行政部门 adj.执行的,实施的', 'v.放,安置;(太阳)落山 n.一套,一副 adj.固定的,规定的', 'v.&n.学习,研究', 'v.证明,证实;结果是;考验,鉴定', 'v.吊,悬挂;绞死', 'adj.全部的,整个的', 'n.岩,岩石 v.摇', 'v.设计;图谋,企图;打算,计划 n.图案,花样;计划,企图', 'adj.充足的,足够的 adv.足够地', 'v.忘记,遗忘', 'prep.自从 conj.因为,既然 adv,后来,从那以后', 'v.要求;声称,主张;索赔;认领 n.主张,断言;索赔要求;要求权,所有权', 'n.笔记,记录,便条;注释,注意,评论;钞票,纸币 v.注意', 'v.排除,消除;搬迁,移动', 'n.管理人,经理', 'v.& n.帮助,援助', 'v.关,关闭;结束,终止 adj.密切的,亲密的;近的,接近的;严密的', 'n.声音,声响 v.发声响;听起来', 'v.享受,喜爱', 'n.网状物;广播网,电视网;网络', 'adj.法律的,法定的;合法的,正当的', 'adj.宗教的;虔诚的', 'adj.冷的,寒冷的;冷淡的 n.冷,寒冷;伤风,感冒', 'n.形式;形状;表格 v.形成,组成', 'adj.最后的,最终的;决定性的', 'adj.主要的.总的', 'n.科学', 'n.绿色 adj.绿色的;生的,未成熟的;缺乏经验的', 'n.记忆,回忆,记忆力', 'n.卡片,名片,贺年卡;纸片', 'prep.在...之上,高于', 'n.席位,座次;底座;所在地 v.使就坐', 'n.细胞;小囚房;蜂房;电池', 'v.建立,设立;制定,规定;委任,安置,使定居;使开业;使确认', 'adj.好的,美的;令人愉快的', 'n.审讯;试验 adj.试验(性)的', 'n.专家,能手 adj.熟练的,有经验的;内行的', 'adj.&pron.那,那个', 'n.春季,春天;弹簧,弹性,发条;泉,源泉 v.跳,跃', 'n.商行,公司 adj.结实的,坚固的;坚定的,坚决的', '民主党人', 'n.无线电通讯', 'v.& n.参观,访问;做客', 'n.经营,管理;管理部门;资方', 'n.小心,注意;照顾,关照 v.关心;介意;喜欢,愿意', 'v.避免;回避,躲开', 'v.想象,设想;料想', 'n.&adv.今晚', 'adj.巨大的,庞大的', 'n.球,球状物;舞会', 'adv.不,不是,没有,毫不', 'v.关,关闭;结束,终止 adj.密切的,亲密的;近的,接近的;严密的', 'v.完成,结束 n.结束,最后阶段', '(yourselves)pron.你自己,你本身', 'v.谈,讲;讨论,议论 n.讲话,演讲', 'n.理论;学说,见解', 'n.冲击,碰撞;效果,影响', 'v.回答;(to)响应', 'n.声明,陈述', 'v.维修,保养;维持,坚持;主张', 'v.袭击;要价,收费;控诉,控告;使充(满),充电 n.价钱,费用,收费;袭击,冲锋;控告;主管,看管;负荷,充电', 'adj.流行的,通俗的,大众的;广受欢迎的,有名的', '传统的', 'prep.到(在)...之上', 'v.展现,显示;揭示,揭露', 'n.方向,方位;(pl.) 用法说明', 'n.武器,兵器', 'n.雇工,雇员', '文化', 'v.包含;容纳', 'n.和平;平静', 'n.头;头领,首脑 v.率领,带头', 'v.& n.控制,支配;克制,抑制', 'n.基(础),底(座);基地 v.(on) 把...建立在...基础上', 'n.痛,疼痛;痛苦,悲痛', 'v.(for)', 'v.玩 n.演奏,表演;游戏,娱乐;剧本,剧;活动,作用', 'n.量度,测量;措施,方法', 'adj.宽阔的;广泛的 adv.完全地,充分地', 'v.摇,摇动;震动,颤抖', 'n.苍蝇 v.飞,飞行;飘扬;飞逝;驾驶', 'v.＆n.会见;采访;面试', 'v.管理,经营;设法(做到);对待,处理', 'n.椅子;(会议) 主席', 'n.鱼 v.钓鱼,捕鱼', 'adj.特别的,特殊;特定的,个别的 v.(pl.)细节,详情', 'n.照相机;电视摄影机', 'n.结构;建筑物 v.构造,建造', 'n.政治', 'v.做,实施,完成;表演,演出', 'n.一点,一些', 'n.重量,体重', 'adv.突然地,意外地', 'v.发现;暴露,显示', 'n.候选人,候补者;报考者;申请者', 'n.顶,顶部 adj.最高的', 'n.生产,产量;产品,作品', 'v.& n.对待,处理;医疗,治疗;款待,请客', 'v.绊倒,失足 n.旅行,远足', 'n.傍晚,晚上', 'v.影响,传染;感动', 'n.内部,里面;内幕 adj.内部的,里面的 adv.在里面,在内部 prep.在...里面(内部)', 'n.会议,讨论会', 'n.单元,单位;部件,元件', 'adv.& adj.最好(的)', 'n.风格;式样', 'n.成(年)人;成体', 'v.& n.发愁,担忧,烦恼', 'n.范围,距离,领域;排列 v.排列成行,延伸', 'v.&n.提及,淡到,说起', 'adv.有些,相当;宁可,宁愿', 'adj.远的,遥远的,久远的 adv.远,遥远,久远;到...程度,...得多', 'adj.深的;深切的 adv.深深地', 'n.过去,昔日 adj.以前的,过去的 prep.经过,超过', 'n.刃,边缘,棱 v.侧身移动,挤进', 'adj.个人的,单独的;独特的 n.个人', 'adj.明确的;特定的,特效的', 'n.作家,作者', 'n.苦恼,麻烦,困难;辛苦,费心 v.麻烦,打扰', 'adj.必须的,必要的,必然的 n.必需品', 'prep.贯穿,遍及', 'n.挑战(书);艰巨任务 v.挑战;要求比试', 'v.＆ n.害怕,恐惧', 'n.肩膀', 'n.公共机构,协会,学校;制度,惯例', 'n.中间 adj.中间的,中部的', 'n.梅,海洋', 'n.梦;梦想,幻想 v.做梦,幻想', 'n.条,杆,棒,棍,闩;酒吧', 'adj.美丽的,漂亮的', 'n.财产,所有物', 'adv.代替;更换', 'v.改善,改进', 'n.原料,材料 v.装,把...塞进', 'v.详细讲述,详谈 n.详细的情况,细节;枝节,琐碎', 'n.方法,办法', 'n.标记,符号;征兆,迹象', 'pron.有人,某人']
-        const $ = (selector) => document.querySelector(selector);
-        /**
-        * 应用程序状态
-        * 包含应用程序的所有动态数据
-        */
-        const state = {
-            str: '',                   // 所有单词的组合字符串
-            currentWordIndex: 0,       // 当前正在输入的单词索引
-            typedChars: 0,             // 当前单词中已输入的字符数
-            selectedWords: [],         // 当前会话所选单词数组
-            rate: 0,                   // 正确按键的比率
-            errorstr: '',              // 追踪错误字符的字符串
-            wordCount: 0,              // 正确输入的单词计数
-            seconds: 0,                // 计时器（秒）
-            isHide: false,             // 隐藏单词的标志
-            intervalId: null,          // 计时器间隔ID
-            currentSound: null,        // 当前单词的音频
-            nextSound: null,           // 下一个单词的音频（预加载）
-            isTypingComplete: false,   // 打字完成的标志
-            isDarkMode: localStorage.getItem('darkMode') === 'true', // 深色模式状态
-            totalWords: 50,            // 单词一次输入的数量
-            isAnimating: false         // 防止动画期间操作的标志
-        }; 1
-        /**
-        * DOM元素
-        * 为性能缓存的DOM元素
-        */
-        const e = {
-            // UI控制元素
-            darkModeToggle: $('.dark-mode-toggle'),
-            difficultySlider: $('.difficulty-slider'),
-            difficultyDropdown: $('.difficulty-dropdown'),
-            levelDisplay: $('.level-display'),
-            hideWordToggle: $('.hide-word-toggle'),
-            restartButton: $('.restart-button'),
-            // 单词显示元素
-            errorText: $('.error-text'),
-            wordTrack: $('.word-track'),
-            prevWordText: $('.prev-word-text'),
-            currentWordText: $('.current-word-text'),
-            nextWordText: $('.next-word-text'),
-            nextNextWordText: $('.next-next-word'),
-            currentParaphrase: $('.paraphrase'),
-            // 统计显示元素
-            levelText: $('.level-text'),
-            speedText: $('.speed-text'),
-            correctText: $('.correct-text'),
-            correctrateText: $('.correctrate-text'),
-            timeText: $('.time-text'),
-            // UI容器
-            startPrompt: $('.start-prompt'),
-            prevWordItem: $('.prev-word'),
-            currentWordItem: $('.current-word'),
-            nextWordItem: $('.next-word'),
-            nextNextWordItem: $('.next-next-word'),
-            difficultyToggle: $('.difficulty-toggle'),
-            progressBar: $('.progress-bar')
+        const $ = (s) => document.querySelector(s);
+
+        // DOM操作工具对象
+        const setDomText = (el, text) => el.textContent = text;
+        const setDomStyle = (el, property, value) => el.style[property] = value;
+
+        // 音频工具对象
+        const audio = {
+            create: (word) => { // 创建单词音频对象
+                const audio = new Audio(`https://dict.youdao.com/dictvoice?type=0&audio=${word}`);
+                audio.load();
+                return audio;
+            },
+            play: async (sound) => { // 播放音频并返回结束的Promise
+                await sound.play();
+                return new Promise(resolve => sound.onended = resolve);
+            },
+            playTwice: async (sound) => { // 播放音频两次
+                for (let i = 0; i < 2; i++) {
+                    await sound.play();
+                    await new Promise(r => sound.onended = r);
+                    sound.currentTime = 0; // 重置音频到开始位置
+                }
+            }
         };
-        // 如果本地存储中保存了深色模式，则初始化深色模式
+
+        /**
+        * 处理动画过渡效果的函数
+        * @param {Object} options - 配置对象
+        * @param {Object} options.elements - DOM元素对象集合
+        * @param {Object} options.classes - 要添加的动画类名集合
+        * @param {number} [options.duration=100] - 动画持续时间（毫秒），默认为100ms
+        * @param {Function} [options.onComplete] - 动画完成后的回调函数
+        */
+        function transitionAnimation({ elements, classes, duration = 100, onComplete }) {
+            requestAnimationFrame(() => {//s=selector, c=className
+                Object.entries(classes).forEach(([s, c]) => c && elements[s]?.classList.add(c));// 添加动画类名
+                setTimeout(() => {
+                    Object.entries(classes).forEach(([s, c]) => c && elements[s]?.classList.remove(c));// 移除动画类名
+                    onComplete?.();
+                }, duration);
+            });
+        }
+
+        // 本地存储工具对象
+        const storage = {
+            get: (key, defaultValue) => localStorage.getItem(key) || defaultValue, // 获取存储值，无值时返回默认值
+            set: (key, value) => localStorage.setItem(key, value), // 设置存储值
+            getBool: (key) => localStorage.getItem(key) === 'true', // 获取布尔值
+            saveToList: (listName, item) => { // 保存项目到指定列表
+                const list = JSON.parse(storage.get(listName, '[]'));
+                if (!list.includes(item)) {
+                    list.push(item);
+                    storage.set(listName, JSON.stringify(list));
+                }
+            }
+        };
+
+        // 格式化工具对象
+        const format = {
+            time: (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`, // 格式化秒数为分钟:秒
+            percentage: (value, total) => total ? `${((value / total) * 100).toFixed(1)}%` : '100%', // 计算百分比
+            speed: (chars, seconds) => seconds ? Math.round(chars / seconds * 60) : '0', // 计算每分钟字符速度
+        };
+
+        // 根据难度级别随机选择指定数量的单词
+        const wordUtils = {
+            selectByLevel: (level, count, wordBank) => {
+                const start = (level - 1) * 50;
+                const available = wordBank.slice(start, start + 50);
+                return Array.from({ length: count }, () => available[Math.floor(Math.random() * available.length)]);
+            },
+            highlightTyped: (word, typedChars) => // 高亮已输入的单词部分
+                typedChars ? `<span class="typed">${word.slice(0, typedChars)}</span>${word.slice(typedChars)}` : word
+        };
+
+        // 状态管理对象
+        const state = {
+            currentWordIndex: 0,       // 当前单词索引
+            typedChars: 0,             // 当前单词已输入字符数
+            selectedWords: [],         // 当前会话的单词数组
+            rate: 0,                   // 正确按键比率
+            errorstr: '',              // 错误字符记录
+            wordCount: 0,              // 正确单词计数
+            errorCount: 0,             // 错误单词计数
+            seconds: 0,                // 计时秒数
+            isHide: false,             // 是否隐藏单词
+            intervalId: null,          // 计时器ID
+            currentSound: null,        // 当前单词音频
+            nextSound: null,           // 下一单词音频
+            isTypingComplete: false,   // 是否完成打字
+            isDarkMode: storage.getBool('darkMode'), // 深色模式状态
+            isSkippedWordsMode: false, // 是否跳过\未掌握单词模式
+            totalWords: 30,            // 每次练习的单词数
+            isAnimating: false,         // 是否正在动画
+            keyErrorCount: 0,           // 按键错误次数
+            correctWords: {},           // 输入正确的单词
+            skippedWord: JSON.parse(storage.get('skippedWords', '[]')) // 跳过的单词
+        };
+
+        // DOM元素缓存
+        const e = {
+            darkModeToggle: $('.dark-mode-toggle'),     // 深色模式开关
+            difficultySlider: $('.difficulty-slider'),  // 难度滑块
+            difficultyDropdown: $('.difficulty-dropdown'), // 难度下拉菜单
+            levelDisplay: $('.level-display'),          // 难度显示
+            hideWordToggle: $('.hide-word-toggle'),     // 隐藏单词开关
+            helpButton: $('.help-button'),              // 帮助按钮
+            skipWordsToggle: $('.skip-mode-toggle'),    // 跳过单词开关
+            restartButton: $('.restart-button'),        // 重启按钮
+            errorText: $('.error-text'),                // 错误提示文本
+            wordTrack: $('.word-track'),                // 单词轨道
+            prevWordText: $('.prev-word-text'),         // 前一单词文本
+            currentWordText: $('.current-word-text'),   // 当前单词文本
+            nextWordText: $('.next-word-text'),         // 下一单词文本
+            nextNextWordText: $('.next-next-word'),     // 下下单词文本
+            currentParaphrase: $('.paraphrase'),        // 当前单词释义
+            levelText: $('.level-text'),                // 难度等级文本
+            speedText: $('.speed-text'),                // 速度文本
+            correctText: $('.correct-text'),            // 正确单词数文本
+            errorWordText: $('.error-word-text'),       // 错误单词数文本
+            correctrateText: $('.correctrate-text'),    // 正确率文本
+            timeText: $('.time-text'),                  // 时间文本
+            startPrompt: $('.start-prompt'),            // 开始提示
+            prevWordItem: $('.prev-word'),              // 前一单词容器
+            currentWordItem: $('.current-word'),        // 当前单词容器
+            nextWordItem: $('.next-word'),              // 下一单词容器
+            nextNextWordItem: $('.next-next-word'),     // 下下单词容器
+            difficultyToggle: $('.difficulty-toggle'),  // 难度切换按钮
+            progressBar: $('.progress-bar'),            // 进度条
+            helpOverlay: $('.help-overlay'),            // 帮助遮罩
+            helpClose: $('.help-close')                 // 帮助关闭按钮
+        };
+
+        // 初始化深色模式
         if (state.isDarkMode) {
             document.body.classList.add('dark-mode');
             e.darkModeToggle.innerHTML = '☀️';
         }
-        /**
-        * 根据难度级别选择一组随机单词
-        * @param {number} level - 难度级别 (1-20)
-        * @param {number} count - 要选择的单词数量
-        * @returns {string[]} - 所选单词数组
-        */
-        function selectWordsByLevel(level, count) {
-            // 根据级别计算起始索引（每级50个单词）
-            const start = (level - 1) * 50;
-            const available = words.slice(start, start + 50);
-            // 从可用单词池中创建随机单词数组
-            return Array.from({ length: count }, () =>
-                available[Math.floor(Math.random() * available.length)]);
-        };
-        //   将秒数格式化为MM:SS时间显示
-        const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-        // 为单词预加载音频以减少播放延迟
-        function preloadAudio(word) {
-            const audio = new Audio(`https://dict.youdao.com/dictvoice?type=0&audio=${word}`);
-            audio.load();
-            return audio;
-        };
 
+        // 初始化程序
         function init() {
-            // 清除任何正在运行的计时器
             clearInterval(state.intervalId);
-            // 重置应用程序状态
+            const wasHidden = state.isHide;
             Object.assign(state, {
                 isTypingComplete: false,
                 isAnimating: false,
@@ -508,210 +708,284 @@
                 currentWordIndex: 0,
                 typedChars: 0
             });
-            // 获取当前难度级别
-            const level = localStorage.getItem('level') || 5;// 获取难度 
-            state.isHide = e.hideWordToggle.innerHTML.includes('eye-slash');
-            // 为此会话生成单词
-            state.selectedWords = selectWordsByLevel(level, state.totalWords);
-            state.str = state.selectedWords.join('');
-            // 预加载前两个单词的音频
-            state.currentSound = preloadAudio(state.selectedWords[0]);
-            state.nextSound = preloadAudio(state.selectedWords[1]);
-            // 更新UI显示
-            e.levelDisplay.textContent = e.levelText.textContent = level;
-            e.timeText.textContent = '00:00';
-            e.speedText.textContent = e.correctText.textContent = '0';
-            e.correctrateText.textContent = '100%';
-            e.errorText.textContent = '';
-            e.progressBar.style.width = `0%`;
-            // 隐藏开始提示并直接开始
+            state.isHide = wasHidden;
+            const level = storage.get('level', 5);
+            e.difficultySlider.value = level;
+            state.selectedWords = wordUtils.selectByLevel(
+                state.isSkippedWordsMode ? 1 : level,
+                state.totalWords,
+                state.isSkippedWordsMode ? state.skippedWord : words
+            );
+            state.currentSound = audio.create(state.selectedWords[0]);
+            state.nextSound = audio.create(state.selectedWords[1]);
+            setDomText(e.levelDisplay, level);
+            setDomText(e.levelText, level);
+            setDomText(e.timeText, '00:00');
+            setDomText(e.speedText, '0');
+            setDomText(e.correctText, '0');
+            setDomText(e.errorWordText, '0');
+            setDomText(e.correctrateText, '100%');
+            setDomText(e.errorText, '');
+            setDomStyle(e.progressBar, 'width', '0%');
             e.startPrompt.style.display = 'none';  // 直接隐藏提示
-            e.wordTrack.style.transform = 'translateX(0)';
-            // 初始化单词显示
+            setDomStyle(e.wordTrack, 'transform', 'translateX(0)');
             updateWordDisplay();
-            playSoundTwice();
-            // 启动计时器
-            state.intervalId = setInterval(() => {
-                if (!state.isTypingComplete) {
-                    state.seconds++;
-                    e.timeText.textContent = formatTime(state.seconds);
-                    // 计算打字速度（每分钟单词数）
-                    e.speedText.textContent = state.seconds
-                        ? Math.round(state.rate / state.seconds * 60)
-                        : '0';
-                }
-            }, 1000);
-        };
-        /**
-        * 根据当前状态更新单词显示
-        * 显示前一个、当前、下一个和下下一个单词
-        */
+            audio.playTwice(state.currentSound);
+            state.intervalId = setInterval(updateTimer, 1000);
+        }
+
+        // 更新计时器
+        function updateTimer() {
+            if (!state.isTypingComplete) {
+                state.seconds++;
+                setDomText(e.timeText, format.time(state.seconds));
+                setDomText(e.speedText, format.speed(state.rate, state.seconds));
+            }
+        }
+
+        // 更新单词显示
         function updateWordDisplay() {
             const i = state.currentWordIndex;
             const current = state.selectedWords[i] || '';
-            // 为当前单词创建带有高亮已输入部分的HTML
-            const typed = state.typedChars
-                ? `<span class="typed">${current.slice(0, state.typedChars)}</span>${current.slice(state.typedChars)}`
-                : current;
-            // 更新单词显示
-            e.prevWordText.textContent = i > 0 ? state.selectedWords[i - 1] : '';
-            e.currentWordText.innerHTML = typed;
-            e.nextWordText.textContent = state.selectedWords[i + 1] || '';
-            e.nextNextWordText.textContent = state.selectedWords[i + 2] || '';
-            // 更新释义/定义文本
-            e.currentParaphrase.textContent = paraphrases[words.indexOf(current)] || '';
-            // 如果启用，则应用单词隐藏
-            [e.prevWordText, e.currentWordText, e.nextWordText, e.nextNextWordText].forEach(el =>
+            const typedHtml = wordUtils.highlightTyped(current, state.typedChars);
+            setDomText(e.prevWordText, i > 0 ? state.selectedWords[i - 1] : '');
+            e.currentWordText.innerHTML = typedHtml;
+            setDomText(e.nextWordText, state.selectedWords[i + 1] || '');
+            setDomText(e.nextNextWordText, state.selectedWords[i + 2] || '');
+            setDomText(e.currentParaphrase, paraphrases[words.indexOf(current)] || '');
+            const wordElements = [e.prevWordText, e.currentWordText, e.nextWordText, e.nextNextWordText];
+            wordElements.forEach(el =>
                 el.classList.toggle('hidden-text', state.isHide));
-        };
-        /**
-        * 带有动画前进到下一个单词
-        * 处理单词过渡和音频播放
-        */
+        }
+
+        // 前进到下一个单词
         function advanceToNextWord() {
-            if (state.isAnimating || state.currentWordIndex + 1 >= state.selectedWords.length) return handleTypingComplete();
+            if (state.currentWordIndex + 1 >= state.selectedWords.length) {
+                if (state.isSkippedWordsMode && state.skippedWord.length === 0) {
+                    setDomText(e.errorText, '恭喜！所有未掌握单词已完成练习！');
+                    state.isSkippedWordsMode = false;
+                    e.skipWordsToggle.textContent = '❌';
+                }
+                return handleTypingComplete();
+            }
+            wordTransition('left');
+        }
+
+        // 跳过当前单词，不计入完成
+        function skipWord() {
+            if (state.currentWordIndex + 1 >= state.selectedWords.length) return handleTypingComplete();
+            const skippedWord = state.selectedWords[state.currentWordIndex];
+            storage.saveToList('skippedWords', skippedWord);
+            wordTransition('left', false);
+        }
+
+        // 返回到上一个单词
+        function goBackWord() {
+            if (state.currentWordIndex <= 0) return;
+            wordTransition('right', false);
+        }
+        // 执行单词切换动画
+        function wordTransition(direction, countAsComplete = true) {
+            if (state.isAnimating) return; // 如果正在动画中则返回
             state.isAnimating = true;
+            const isForward = direction === 'left'; // 判断是否向前移动
+            const animationClasses = { // 定义各个元素的动画类
+                'wordTrack': `slide-${direction}`, // 轨道整体滑动
+                'prevWordItem': isForward ? 'fade-out' : 'becoming-current', // 前一个词淡出或变为当前
+                'currentWordItem': isForward ? 'moving-left' : 'slide-in-right', // 当前词向左移动或从右滑入
+                'nextWordItem': isForward ? 'becoming-current' : 'fade-out', // 下一个词变为当前或淡出
+                'nextNextWordItem': isForward ? 'slide-in' : null // 下下个词滑入
+            };
+
+            // 更新音频状态
             state.currentSound = state.nextSound;
-            state.nextSound = preloadAudio(state.selectedWords[state.currentWordIndex + 2]);
-            playSoundTwice();
-            // 添加动画
-            requestAnimationFrame(() => {
-                e.prevWordItem.classList.add('fade-out');
-                e.currentWordItem.classList.add('moving-left');
-                e.nextWordItem.classList.add('becoming-current');
-                e.nextNextWordItem.classList.add('slide-in');
-                e.wordTrack.classList.add('slide-left');
-                setTimeout(() => {
-                    state.currentWordIndex++;
-                    state.typedChars = 0;
-                    // 移除动画类
-                    [e.prevWordItem, e.currentWordItem, e.nextWordItem, e.nextNextWordItem, e.wordTrack].forEach(el =>
-                        el.classList.remove('fade-out', 'moving-left', 'becoming-current', 'slide-in', 'slide-left')
-                    );
-                    e.wordTrack.style.transform = 'translateX(0)';
-                    updateWordDisplay();
-                    state.isAnimating = false;
-                    //更新进度条
-                    let progress = (state.wordCount / state.totalWords) * 100;
-                    e.progressBar.style.width = `${progress}%`;
-                }, 100);
+            state.nextSound = audio.create(state.selectedWords[state.currentWordIndex + (isForward ? 2 : 0)]);
+
+            // 执行动画过渡
+            transitionAnimation({
+                elements: { // 定义要操作的DOM元素
+                    'wordTrack': e.wordTrack,
+                    'prevWordItem': e.prevWordItem,
+                    'currentWordItem': e.currentWordItem,
+                    'nextWordItem': e.nextWordItem,
+                    'nextNextWordItem': e.nextNextWordItem
+                },
+                classes: animationClasses,
+                duration: 100,
+                onComplete: () => { // 动画完成后的回调
+                    setDomStyle(e.wordTrack, 'transform', 'translateX(0)'); // 重置轨道位置
+
+                    // 更新单词索引和计数
+                    if (isForward) {
+                        state.currentWordIndex++; // 向前移动索引
+                        state.typedChars = 0; // 重置已输入字符
+                        state.keyErrorCount = 0; // 重置按键错误次数
+                    } else {
+                        state.currentWordIndex--; // 向后移动索引
+                        state.typedChars = 0; // 重置已输入字符
+                        state.keyErrorCount = 0;   // 重置按键错误次数
+                        if (countAsComplete) state.wordCount = Math.max(0, state.wordCount - 1); // 减少完成单词计数
+                    }
+
+                    // 更新进度条
+                    const progress = `${((state.wordCount + state.errorCount) / state.totalWords) * 100}%`;
+
+                    setDomStyle(e.progressBar, 'width', progress);
+
+                    // 更新显示和状态
+                    updateWordDisplay(); // 更新单词显示
+                    updateStats(); // 更新统计信息
+                    state.isAnimating = false; // 重置动画状态
+                    audio.playTwice(state.currentSound); // 播放两次当前单词音频
+                }
             });
         }
-        //练习完成
+
+        // 处理练习完成
         function handleTypingComplete() {
             state.isTypingComplete = true;
             clearInterval(state.intervalId);
-            // 显示完成消息
-            e.errorText.textContent = '练习完成！';
-            e.errorText.style.color = 'var(--primary-color)';
-            e.progressBar.style.width = `100%`;
-            // 延迟后重置
+            setDomText(e.errorText, '练习完成！');
+            setDomStyle(e.errorText, 'color', 'var(--primary-color)');
+            setDomStyle(e.progressBar, 'width', '100%');
             setTimeout(() => {
-                e.errorText.style.color = 'var(--error-color)';
+                setDomStyle(e.errorText, 'color', 'var(--error-color)');
                 init();
             }, 2000);
-        };
-        /**
-        * 处理键盘打字输入
-        * 检查输入是否与预期字符匹配并相应更新
-        * @param {KeyboardEvent} event - 键盘事件
-        */
-        function handleTyping(event) {
+        }
+
+        // 处理按键输入
+        function handleTyping(keyCode) {
             if (state.isTypingComplete || state.isAnimating) return;
             const current = state.selectedWords[state.currentWordIndex];
             const expected = current.charAt(state.typedChars).toUpperCase();
-            const typed = String.fromCharCode(event);
+            const typed = String.fromCharCode(keyCode);
             if (expected === typed) {
-                // 按下正确键
                 state.rate++;
                 state.typedChars++;
-                e.errorText.textContent = '';
+                state.keyErrorCount = 0;
+                setDomText(e.errorText, '');
                 updateWordDisplay();
-                // 检查单词是否完成
                 if (state.typedChars === current.length) {
                     state.wordCount++;
+                    if (state.isSkippedWordsMode && state.isHide) {
+                        state.correctWords[current] = (state.correctWords[current] || 0) + 1;
+                        if (state.correctWords[current] > 2) {
+                            state.skippedWord = state.skippedWord.filter(word => word !== current);
+                            storage.set('skippedWords', JSON.stringify(state.skippedWord));
+                            setDomText(e.errorText, `已掌握单词：${current}`);
+                            setTimeout(() => {
+                                setDomText(e.errorText, '');
+                                advanceToNextWord();
+                            }, 1000);
+                            return;
+                        }
+                    }
                     advanceToNextWord();
                 }
             } else {
-                // 按下错误键
                 state.errorstr += expected;
-                e.errorText.textContent = `按键错误: ${typed}`;
-                beep.play();
+                state.keyErrorCount++;
+                setDomText(e.errorText, `按键错误: ${typed}`);
+                if (state.keyErrorCount >= 5) {
+                    skipWord();
+                    state.keyErrorCount = 0;
+                    state.errorCount++;
+                    setDomText(e.errorText, `错误次数过多，标记为未掌握单词：` + state.selectedWords[state.currentWordIndex]);
+                }
+                beep.play(); // 播放错误提示音
             }
             updateStats();
-        };
-        /**
-        * 更新统计数据显示
-        * 计算准确率和每分钟单词数
-        */
+        }
+
+        // 更新统计信息
         function updateStats() {
             const total = state.rate + state.errorstr.length;
-            // 更新速度（每分钟单词数）
-            e.speedText.textContent = state.seconds
-                ? Math.round(state.rate / state.seconds * 60)
-                : '0';
-            // 更新单词计数
-            e.correctText.textContent = state.wordCount;
-            // 更新准确率百分比
-            e.correctrateText.textContent = total
-                ? `${((state.rate / total) * 100).toFixed(1)}%`
-                : '100%';
-        };
-        //切换深色模式
+            setDomText(e.speedText, format.speed(state.rate, state.seconds));
+            setDomText(e.correctText, state.wordCount);
+            setDomText(e.errorWordText, state.errorCount);
+            setDomText(e.correctrateText, format.percentage(state.rate, total));
+        }
+
+        // 切换深色模式并保存设置
         function toggleDarkMode() {
             state.isDarkMode = !state.isDarkMode;
             document.body.classList.toggle('dark-mode', state.isDarkMode);
             e.darkModeToggle.textContent = state.isDarkMode ? '☀️' : '🌙';
-            localStorage.setItem('darkMode', state.isDarkMode);
+            storage.set('darkMode', state.isDarkMode);
         }
-        //  根据滑块值更新难度级别 使用新难度重置会话
+
+        // 更新难度级别,根据滑块更新难度并重启
         function updateDifficulty() {
             const level = e.difficultySlider.value;
-            localStorage.setItem('level', level);
-            e.levelDisplay.textContent = e.levelText.textContent = level;
+            storage.set('level', level);
+            setDomText(e.levelDisplay, level);
+            setDomText(e.levelText, level);
             e.difficultyDropdown.classList.remove('visible');
             init();
-        };
+        }
+
         // 切换单词隐藏模式
         function toggleHideWord() {
             state.isHide = !state.isHide;
             e.hideWordToggle.textContent = state.isHide ? '👀' : '🙈';
             updateWordDisplay();
-        };
-        //将当前单词音频播放两次
-        const playSoundTwice = async () => {
-            for (let i = 0; i < 2; i++) {
-                await state.currentSound.play();
-                await new Promise(r => state.currentSound.onended = r);
-                state.currentSound.currentTime = 0;
+        }
+
+        //跳过单词练习模式
+        function toggleSkipWordsMode() {
+            state.skippedWord = JSON.parse(storage.get('skippedWords', '[]'))
+            if (state.skippedWord.length === 0) {
+                setDomText(e.errorText, '没有未掌握的单词,请继续练习');
+                e.skipWordsToggle.textContent = '❌';
+                return;
             }
-        };
+            state.isSkippedWordsMode = !state.isSkippedWordsMode;
+            e.skipWordsToggle.textContent = state.isSkippedWordsMode ? '🔥' : '❌';
+            init();
+        }
+
+        //清理跳过的单词
+        function clearSkippedWords() {
+            storage.set('skippedWords', '[]');
+            state.skippedWord = [];
+            setDomText(e.errorText, '已清除未掌握单词');
+        }
+
         // 事件监听器
         e.darkModeToggle.addEventListener('click', toggleDarkMode);
-        e.difficultySlider.addEventListener('input', () => e.levelDisplay.textContent = e.difficultySlider.value);
+        e.skipWordsToggle.addEventListener('click', toggleSkipWordsMode);
+        e.helpButton.addEventListener('click', () => e.helpOverlay.style.display = 'flex');
+        e.helpClose.addEventListener('click', () => e.helpOverlay.style.display = 'none');
+        e.difficultySlider.addEventListener('input', () => setDomText(e.levelDisplay, e.difficultySlider.value));
         e.difficultySlider.addEventListener('change', updateDifficulty);
         e.hideWordToggle.addEventListener('click', toggleHideWord);
         e.restartButton.addEventListener('click', init);
         e.startPrompt.addEventListener('click', init);
         e.difficultyToggle.addEventListener('click', () => e.difficultyDropdown.classList.toggle('visible'));
-        //点击单词，播放声音
-        e.wordTrack.addEventListener('click', (event) => {
+
+        // 点击单词播放音频
+        e.wordTrack.addEventListener('click', (event) => { // 点击单词播放对应音频
             const target = event.target;
             if (target.classList.contains('prev-word-text') && target.textContent) {
-                preloadAudio(target.textContent).play();
+                audio.create(target.textContent).play();
             } else if (target.classList.contains('current-word-text')) {
-                state.currentSound.play()
-            } else if (target.classList.contains('next-word-text')) {
-                state.nextSound.play()
+                state.currentSound.play();
+            } else if (target.classList.contains('next-word-text') && state.nextSound) {
+                state.nextSound.play();
             }
         });
-        //打字输入
-        document.addEventListener('keydown', (event) => {
+
+        // 键盘事件监听器
+        document.addEventListener('keydown', (event) => { // 处理键盘输入事件
             const { keyCode } = event;
-            if (keyCode === 13) e.errorText.textContent = state.selectedWords[state.wordCount];// 回车显示单词
-            else if (keyCode === 220) state.currentSound.play(); // 反斜杠 = 播放声音
-            else if (keyCode === 27) toggleHideWord();   // Esc = 切换单词隐藏
-            else if (keyCode >= 65 && keyCode <= 90) handleTyping(keyCode); // A-Z = 打字
+            if (keyCode === 13) setDomText(e.errorText, state.selectedWords[state.currentWordIndex]); // 回车显示当前单词
+            else if (keyCode === 220) state.currentSound.play(); // 反斜杠播放当前单词音频
+            else if (keyCode === 27) toggleHideWord(); // Esc切换隐藏模式
+            else if (keyCode === 35) clearSkippedWords(); // End清除跳过的单词
+            else if (keyCode === 39 && state.isHide) skipWord(); // 右键跳过单词
+            else if (keyCode === 37 && state.isHide) goBackWord(); // 左键返回上个单词
+            else if (keyCode >= 65 && keyCode <= 90) handleTyping(keyCode); // A-Z处理打字
         });
     </script>
 </body>
