@@ -344,7 +344,7 @@
                         <h3>基本操作</h3>
                         <ul>
                             <li>点击“开始练习”区域开始训练</li>
-                            <li>每次随机筛选30个单词练习</li>
+                            <li>每次随机筛选25个单词练习</li>
                             <li>单词听写时，输入错误5次单词会加入未掌握单词库</li>
                             <li>难度级别共40级,每级别25词</li>
                             <li>未掌握单词练习中若同时开启隐藏单词模式听写，输入正确3次可从未掌握单词中清除该单词，下次练习时就不会有该单词了</li>
@@ -357,8 +357,9 @@
                             <p><span class="key">\</span> 播放当前单词音频</p>
                             <p><span class="key">Esc</span> 切换隐藏模式</p>
                             <p><span class="key">End</span> 清除跳过的单词</p>
-                            <p><span class="key">→</span> 隐藏模式中跳过当前未掌握的单词</p>
-                            <p><span class="key">←</span> 隐藏模式中返回上个单词</p>
+                            <p><span class="key">→</span> 跳过当前未掌握的单词</p>
+                            <p><span class="key">←</span> 返回上个单词</p>
+                            <p><span class="key">↑</span> 难度级别+1</p>
                         </ul>
                     </section>
                 </div>
@@ -730,6 +731,17 @@
             s.skippedWord = [];
             setDomText(e.errorText, '已清除未掌握单词');
         }
+        // 增加难度并重新开始练习
+        function increaseDifficulty() {
+            const currentLevel = parseInt(e.difficultySlider.value);
+            const maxLevel = parseInt(e.difficultySlider.max);
+            if (currentLevel < maxLevel) {
+                e.difficultySlider.value = currentLevel + 1;
+                updateDifficulty();
+            } else {
+                setDomText(e.errorText, '已达到最高难度级别!');
+            }
+        }
         e.darkModeToggle.addEventListener('click', toggleDarkMode); // 切换暗黑模式
         e.skipWordsToggle.addEventListener('click', toggleSkipWordsMode); // 切换未掌握单词练习模式
         e.helpButton.addEventListener('click', () => e.helpOverlay.style.display = 'flex'); // 显示帮助窗口
@@ -754,8 +766,11 @@
             else if (keyCode === 35) clearSkippedWords(); // 按End键清除跳过的单词
             else if (keyCode === 39 && s.isHide) skipWord(); // 在隐藏模式下按右箭头跳过当前单词
             else if (keyCode === 37 && s.isHide) goBackWord(); // 在隐藏模式下按左箭头返回上一个单词
+            else if (keyCode === 38) increaseDifficulty(); // 按上箭头键增加难度
             else if (keyCode >= 65 && keyCode <= 90) handleTyping(keyCode); // 处理A-Z字母键的输入
         });
+
+
     </script>
 </body>
 
