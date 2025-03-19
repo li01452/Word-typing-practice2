@@ -148,6 +148,8 @@
             font-weight: bold;
             color: var(--current-word-color);
             opacity: 1;
+            transition: all 0.2s ease;
+            transform: scale(1.1);
         }
 
         .paraphrase {
@@ -155,11 +157,12 @@
             height: 90px;
             text-align: center;
             color: var(--next-word-color);
-            transition: all 2s ease;
+            transition: all 0.2s ease;
         }
 
         .typed {
             color: var(--highlight-color);
+            transition: color 0.2s ease;
         }
 
         .error-text {
@@ -592,11 +595,12 @@
                     setDomText(e.errorText, '恭喜！所有未掌握单词已完成练习！');
                     s.isSkippedWordsMode = false;
                     e.skipWordsToggle.textContent = '🎯';
-                }
+                } 1
                 return handleTypingComplete(); // 处理打字完成
             }
             s.currentWordIndex++; // 增加当前单词索引
             s.typedChars = 0; // 重置已输入字符数
+            s.errorCount = 0; // 重置错误单词数
             s.keyErrorCount = 0; // 重置错误计数
             s.currentSound = s.nextSound; // 更新当前音频
             s.nextSound = audio.create(s.selectedWords[s.currentWordIndex + 1]); // 创建下一个单词音频
@@ -637,7 +641,7 @@
             setDomStyle(e.progressBar, 'width', '100%');
             setTimeout(() => {
                 setDomStyle(e.errorText, 'color', 'var(--error-color)');
-                init();
+                updateDifficulty();
             }, 2000);
         }
         // 处理打字输入
@@ -720,6 +724,7 @@
             if (s.skippedWord.length === 0) {
                 setDomText(e.errorText, '没有未掌握的单词,请继续练习');
                 e.skipWordsToggle.textContent = '🎯';
+                return;
             }
             s.isSkippedWordsMode = !s.isSkippedWordsMode;
             e.skipWordsToggle.textContent = s.isSkippedWordsMode ? '📚' : '🎯';
