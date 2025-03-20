@@ -350,6 +350,7 @@
                             <li>每次随机筛选25个单词练习</li>
                             <li>单词听写时，输入错误5次单词会加入未掌握单词库</li>
                             <li>难度级别共40级,每级别25词</li>
+                            <li>练习完成之后难度自动提升</li>
                             <li>未掌握单词练习中若同时开启隐藏单词模式听写，输入正确3次可从未掌握单词中清除该单词，下次练习时就不会有该单词了</li>
                         </ul>
                     </section>
@@ -581,7 +582,7 @@
             s.errorCount = 0; // 重置错误单词数
             s.keyErrorCount = 0; // 重置错误计数
             e.slider.style.transform = `translateX(${offset}px)`; // 设置偏移量
-            highlightCurrentWord(current);
+            highlightWord(current);
             setDomText(e.paraphrase, paraphrases[words.indexOf(current)] || ''); // 显示释义
             if (i > 0) { // 切换活动类
                 s.wordElements[i - 1].classList.remove('active');
@@ -591,27 +592,27 @@
                 audio.playTwice(s.currentSound); // 播放当前单词音频两次
             }
         }
-        // 高亮当前单词
-        function highlightCurrentWord(word) {
+        // 单词高亮输入的字母
+        function highlightWord(word) {
             const currentWordEl = s.wordElements[s.wordIndex];
             currentWordEl.innerHTML = s.typedChars ? `<span class="typed">${word.substring(0, s.typedChars)}</span>${word.substring(s.typedChars)}` : word; // 高亮已输入部分
         }
         // 进入下一个单词
-        function advanceToNextWord() {
+        function nextWord() {
             if (s.wordIndex + 1 >= s.selectedWords.length) {
                 if (s.isSkippedWordsMode && s.skippedWord.length === 0) {
                     setDomText(e.errorText, '恭喜！所有未掌握单词已完成练习！');
                     s.isSkippedWordsMode = false;
                     e.skipWordsToggle.textContent = '🎯';
                 } 1
-                return handleTypingComplete(); // 处理打字完成
+                return unitComplete(); // 处理打字完成
             }
             s.wordIndex++; // 增加当前单词索引
             updateWord(); // 更新单词显示
         }
         // 跳过当前单词
         function skipWord() {
-            if (s.wordIndex + 1 >= s.selectedWords.length) return handleTypingComplete(); // 处理打字完成
+            if (s.wordIndex + 1 >= s.selectedWords.length) return unitComplete(); // 处理打字完成
             const skippedWord = s.selectedWords[s.wordIndex];
             storage.saveToList('skippedWords', skippedWord); // 保存到未掌握单词列表
             s.wordIndex++; // 增加当前单词索引
@@ -627,8 +628,8 @@
             s.wordCount-- // 减少已完成单词数
             updateWord(); // 更新单词显示
         }
-        // 处理打字完成
-        function handleTypingComplete() {
+        // 单元完成
+        function unitComplete() {
             s.isTypingComplete = true;
             clearInterval(s.intervalId);
             setDomText(e.errorText, '练习完成！');
@@ -648,9 +649,8 @@
             if (expected === typed) {
                 s.rate++; // 增加正确字符数
                 s.typedChars++; // 增加已输入字符数
-                s.keyErrorCount = 0; // 重置错误计数
                 setDomText(e.errorText, ''); // 清空错误提示
-                highlightCurrentWord(current); // 高亮当前单词
+                highlightWord(current); // 高亮当前单词
                 if (s.typedChars === current.length) {
                     s.wordCount++; // 增加已完成单词数
                     if (s.isSkippedWordsMode && s.isHide) {
@@ -661,12 +661,12 @@
                             setDomText(e.errorText, `已掌握单词：${current}`); // 显示提示
                             setTimeout(() => {
                                 setDomText(e.errorText, ''); // 清空提示
-                                advanceToNextWord(); // 进入下一个单词
+                                nextWord(); // 进入下一个单词
                             }, 1000);
                             return;
                         }
                     }
-                    advanceToNextWord(); // 进入下一个单词
+                    nextWord(); // 进入下一个单词
                 }
             } else {
                 s.errorstr += expected; // 增加错误字符串
@@ -675,7 +675,6 @@
                 if (s.keyErrorCount > 2) {
                     setDomText(e.errorText, `错误次数过多，标记为未掌握单词：` + current);
                     skipWord(); // 跳过当前单词
-                    s.keyErrorCount = 0; // 重置错误计数
                     s.errorCount++; // 增加错误单词数
                 }
             }
