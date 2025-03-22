@@ -634,7 +634,7 @@
             setDomStyle(e.progressBar, 'width', '100%');
             setTimeout(() => {
                 setDomStyle(e.errorText, 'color', 'var(--error-color)');
-                increaseDifficulty();
+                updateDifficulty(1); // 更新难度级别+1
             }, 2000);
         }
         // 处理打字输入
@@ -696,7 +696,6 @@
         // 更新难度级别
         function updateDifficulty(change = 0) {
             const level = Number(e.difficultySlider.value) + change;
-            console.log(change, e.difficultySlider.value, level);
             storage.set('level', level); // 保存级别
             e.difficultyDropdown.classList.remove('visible');
             init();
