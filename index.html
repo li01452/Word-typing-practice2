@@ -44,7 +44,6 @@
 
         body {
             background-color: var(--bg-color);
-            font-family: "Microsoft YaHei", sans-serif;
             color: var(--text-color);
             line-height: 1.5;
             padding: 10px;
@@ -127,6 +126,7 @@
         .slider {
             display: flex;
             position: absolute;
+            font-family: "Candara";
             height: 100%;
             transition: transform 0.2s ease;
             will-change: transform;
@@ -140,6 +140,7 @@
             font-size: 28px;
             transition: all 0.2s ease;
             opacity: 0.7;
+            letter-spacing: 0.2px;
             color: var(--next-word-color);
         }
 
@@ -448,9 +449,9 @@
             speed: (chars, seconds) => seconds ? Math.round(chars / seconds * 60) : '0',
         };
         const s = {
-            wordIndex: 0,        // 当前单词索引
-            typedChars: 0,             // 当前已输入的字符数
-            selectedWords: [],         // 选中待练习的单词列表
+            wordIndex: 0,             // 当前单词索引
+            typedChars: 0,            // 当前已输入的字符数
+            selectedWords: [],        // 选中待练习的单词列表
             rate: 0,                  // 正确输入的字符总数
             errorstr: '',             // 错误输入的字符串
             wordCount: 0,             // 完成的单词数
@@ -464,11 +465,12 @@
             isDarkMode: storage.getBool('darkMode'),  // 是否为暗黑模式
             isSkippedWordsMode: false, // 是否为未掌握单词练习模式
             totalWords: 25,           // 每轮练习的单词总数
-            isAnimating: false,       // 是否正在动画过渡
             keyErrorCount: 0,         // 当前单词的错误输入次数
             correctWords: {},         // 记录正确输入的单词及次数
             skippedWord: JSON.parse(storage.get('skippedWords', '[]')), // 未掌握的单词列表
-            wordElements: null        // 单词DOM元素的集合
+            wordElements: null,       // 单词DOM元素的集合
+            currentWordElement: null,  // 当前单词DOM元素
+            currentWord: '',           // 当前单词
         };
         const e = {
             darkModeToggle: $('.dark-mode-toggle'),
@@ -520,8 +522,9 @@
             }
             // 选择指定数量的单词
             s.selectedWords = shuffled.slice(0, Math.min(s.totalWords, shuffled.length));
+            s.currentWord = s.selectedWords[0];
             // 生成待练习单词 DOM 并初始化音频
-            let html = `<div class="word active" data-word="${s.selectedWords[0]}">${s.selectedWords[0]}</div>`;
+            let html = `<div class="word active" data-word="${s.currentWord}">${s.currentWord}</div>`;
             for (let i = 1; i < s.selectedWords.length; i++) {
                 html += `<div class="word" data-word="${s.selectedWords[i]}">${s.selectedWords[i]}</div>`;
             }
@@ -529,7 +532,7 @@
             s.wordElements = e.slider.querySelectorAll('.word');
             e.slider.style.transform = 'translateX(266px)';
             // 创建音频对象
-            [s.currentSound, s.nextSound] = [audio.create(s.selectedWords[0]), audio.create(s.selectedWords[1])];
+            [s.currentSound, s.nextSound] = [audio.create(s.currentWord), audio.create(s.selectedWords[1])];
         }
         // 初始化练习
         function init() {
@@ -537,7 +540,6 @@
             const wasHidden = s.isHide; // 保存隐藏状态
             Object.assign(s, {
                 isTypingComplete: false,
-                isAnimating: false,
                 seconds: 0,
                 str: '',
                 selectedWords: [],
@@ -548,7 +550,7 @@
                 typedChars: 0
             });
             s.isHide = wasHidden; // 恢复隐藏状态
-            const level = s.isSkippedWordsMode ? 0 : storage.get('level', 5);
+            const level = s.isSkippedWordsMode ? 0 : Math.min(Math.max(parseInt(storage.get('level', 5)), 1), 40);// 读取或设置难度等级，范围1-40
             e.difficultySlider.value = level;
             initializeWords(level);
             setDomText(e.levelDisplay, level);
@@ -576,14 +578,14 @@
         // 更新单词显示
         function updateWord() {
             const i = s.wordIndex;
-            const current = s.selectedWords[i];
             const offset = -i * 266 + 266; // wordWidth = 266 计算偏移量
+            s.currentWord = s.selectedWords[i];
             s.typedChars = 0; // 重置已输入字符数
             s.errorCount = 0; // 重置错误单词数
             s.keyErrorCount = 0; // 重置错误计数
             e.slider.style.transform = `translateX(${offset}px)`; // 设置偏移量
-            highlightWord(current);
-            setDomText(e.paraphrase, paraphrases[words.indexOf(current)] || ''); // 显示释义
+            s.currentWordElement = s.wordElements[s.wordIndex];
+            setDomText(e.paraphrase, paraphrases[words.indexOf(s.currentWord)] || ''); // 显示释义
             if (i > 0) { // 切换活动类
                 s.wordElements[i - 1].classList.remove('active');
                 s.wordElements[i].classList.add('active');
@@ -591,11 +593,6 @@
                 s.nextSound = audio.create(s.selectedWords[i + 1]); // 创建下一个单词音频
                 audio.playTwice(s.currentSound); // 播放当前单词音频两次
             }
-        }
-        // 单词高亮输入的字母
-        function highlightWord(word) {
-            const currentWordEl = s.wordElements[s.wordIndex];
-            currentWordEl.innerHTML = s.typedChars ? `<span class="typed">${word.substring(0, s.typedChars)}</span>${word.substring(s.typedChars)}` : word; // 高亮已输入部分
         }
         // 进入下一个单词
         function nextWord() {
@@ -641,21 +638,20 @@
             }, 2000);
         }
         // 处理打字输入
-        function handleTyping(keyCode) {
-            if (s.isTypingComplete || s.isAnimating) return;
-            const current = s.selectedWords[s.wordIndex];
+        function handleTyping(typed) {
+            if (s.isTypingComplete) return;
+            const current = s.currentWord; // 获取当前单词
             const expected = current.charAt(s.typedChars).toUpperCase(); // 获取当前期望字符
-            const typed = String.fromCharCode(keyCode); // 获取输入字符
             if (expected === typed) {
                 s.rate++; // 增加正确字符数
                 s.typedChars++; // 增加已输入字符数
                 setDomText(e.errorText, ''); // 清空错误提示
-                highlightWord(current); // 高亮当前单词
+                s.currentWordElement.innerHTML = s.typedChars ? `<span class="typed">${current.substring(0, s.typedChars)}</span>${current.substring(s.typedChars)}` : current// 高亮已经输入的字母
                 if (s.typedChars === current.length) {
                     s.wordCount++; // 增加已完成单词数
                     if (s.isSkippedWordsMode && s.isHide) {
                         s.correctWords[current] = (s.correctWords[current] || 0) + 1; // 增加正确输入次数
-                        if (s.correctWords[current] > 2) {
+                        if (s.correctWords[current] > 3) {
                             s.skippedWord = s.skippedWord.filter(word => word !== current); // 从未掌握单词列表中移除
                             storage.set('skippedWords', JSON.stringify(s.skippedWord)); // 更新存储
                             setDomText(e.errorText, `已掌握单词：${current}`); // 显示提示
@@ -672,7 +668,7 @@
                 s.errorstr += expected; // 增加错误字符串
                 s.keyErrorCount++; // 增加错误计数
                 setDomText(e.errorText, `按键错误: ${typed}`);
-                if (s.keyErrorCount > 2) {
+                if (s.keyErrorCount > 4) {
                     setDomText(e.errorText, `错误次数过多，标记为未掌握单词：` + current);
                     skipWord(); // 跳过当前单词
                     s.errorCount++; // 增加错误单词数
@@ -698,11 +694,10 @@
             storage.set('darkMode', s.isDarkMode);
         }
         // 更新难度级别
-        function updateDifficulty() {
-            const level = e.difficultySlider.value; // 获取滑块值
+        function updateDifficulty(change = 0) {
+            const level = Number(e.difficultySlider.value) + change;
+            console.log(change, e.difficultySlider.value, level);
             storage.set('level', level); // 保存级别
-            setDomText(e.levelDisplay, level);
-            setDomText(e.levelText, level);
             e.difficultyDropdown.classList.remove('visible');
             init();
         }
@@ -730,17 +725,18 @@
             s.skippedWord = [];
             setDomText(e.errorText, '已清除未掌握单词');
         }
-        // 增加难度并重新开始练习
-        function increaseDifficulty() {
-            const currentLevel = parseInt(e.difficultySlider.value);
-            const maxLevel = parseInt(e.difficultySlider.max);
-            if (currentLevel < maxLevel) {
-                e.difficultySlider.value = currentLevel + 1;
-                updateDifficulty();
-            } else {
-                setDomText(e.errorText, '已达到最高难度级别!');
-            }
-        }
+        document.addEventListener('keydown', (event) => {
+            const { keyCode } = event;
+            if (keyCode === 13) setDomText(e.errorText, s.currentWord); // 按回车键显示当前单词
+            else if (keyCode === 220) s.currentSound.play(); // 按\键播放当前单词音频
+            else if (keyCode === 27) toggleHideWord(); // 按ESC键切换隐藏/显示单词模式
+            else if (keyCode === 35) clearSkippedWords(); // 按End键清除跳过的单词
+            else if (keyCode === 39 && s.isHide) skipWord(); // 在隐藏模式下按右箭头跳过当前单词
+            else if (keyCode === 37 && s.isHide) goBackWord(); // 在隐藏模式下按左箭头返回上一个单词
+            else if (keyCode === 38) updateDifficulty(1); // 按上箭头键增加难度
+            else if (keyCode === 40) updateDifficulty(-1); // 按下箭头键减少难度 
+            else if (keyCode >= 65 && keyCode <= 90) handleTyping(String.fromCharCode(keyCode)); // 处理A-Z字母键的输入
+        });
         e.darkModeToggle.addEventListener('click', toggleDarkMode); // 切换暗黑模式
         e.skipWordsToggle.addEventListener('click', toggleSkipWordsMode); // 切换未掌握单词练习模式
         e.helpButton.addEventListener('click', () => e.helpOverlay.style.display = 'flex'); // 显示帮助窗口
@@ -751,23 +747,7 @@
         e.restartButton.addEventListener('click', init); // 重新开始练习
         e.startPrompt.addEventListener('click', init); // 开始练习
         e.difficultyToggle.addEventListener('click', () => e.difficultyDropdown.classList.toggle('visible')); // 显示/隐藏难度调整菜单
-        e.slider.addEventListener('click', (event) => {
-            const target = event.target;
-            if (target.dataset.word) {
-                audio.create(target.dataset.word).play();
-            }
-        });
-        document.addEventListener('keydown', (event) => {
-            const { keyCode } = event;
-            if (keyCode === 13) setDomText(e.errorText, s.selectedWords[s.wordIndex]); // 按回车键显示当前单词
-            else if (keyCode === 220) s.currentSound.play(); // 按\键播放当前单词音频
-            else if (keyCode === 27) toggleHideWord(); // 按ESC键切换隐藏/显示单词模式
-            else if (keyCode === 35) clearSkippedWords(); // 按End键清除跳过的单词
-            else if (keyCode === 39 && s.isHide) skipWord(); // 在隐藏模式下按右箭头跳过当前单词
-            else if (keyCode === 37 && s.isHide) goBackWord(); // 在隐藏模式下按左箭头返回上一个单词
-            else if (keyCode === 38) increaseDifficulty(); // 按上箭头键增加难度
-            else if (keyCode >= 65 && keyCode <= 90) handleTyping(keyCode); // 处理A-Z字母键的输入
-        });
+        e.slider.addEventListener('click', (event) => { if (event.target.dataset.word) audio.create(event.target.dataset.word).play() });
     </script>
 </body>
 
