@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 
@@ -668,6 +669,7 @@
                 s.errorstr += expected; // 增加错误字符串
                 s.keyErrorCount++; // 增加错误计数
                 setDomText(e.errorText, `按键错误: ${typed}`);
+                beep.play(); // 播放错误提示音
                 if (s.keyErrorCount > 4) {
                     setDomText(e.errorText, `错误次数过多，标记为未掌握单词：` + current);
                     skipWord(); // 跳过当前单词
